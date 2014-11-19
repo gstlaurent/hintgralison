@@ -75,7 +75,7 @@ lacks(Player, Card).
 
 cardInfo(Player, Card, Status).
 
-showTrios(Player, Room, Weapon, Character).
+showTrios(Player, Room, Weapon, Character).  % this player showed these things. It's a fact.
 
 %% suggestShowedTrio(SuggestingPlayer, ShowingPlayer, Room, Weapon, Character). %
 

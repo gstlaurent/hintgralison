@@ -35,7 +35,7 @@ dead(mustard).
 
 me(plum).
 
-has(plum, )
+%% has(plum, )
 
 
 
@@ -59,22 +59,32 @@ card(X) :- character(X).
 card(X) :- weapon(X).
 card(X) :- room(X).
 
+lacksTrio(Player, Character, Weapon, Room) :-
+   lacksCard(Player, Character), lacksCard(Player, Weapon), lacksCard(Player, Room).
 
+
+%% lacksCard and hasCard creates proper assertions if necessary.
 lacksCard(Player, Card) :- lacks(Player, Card), !.
 lacksCard(Player, Card) :- assert(lacks(Player, Card)), !.
 
-lacksAll(Player, Character, Weapon, Room) :-
-   lacksCard(Player, Character), lacksCard(Player, Weapon), lacksCard(Player, Room).
+%% Ensures other players lack the card, if neccessary.
+hasCard(Player, Card) :- has(Player, Card), !.
+hasCard(Player, Card) :- assert(has(Player, Card)), allPlayers(Players),
+   delete(Players, Player, Others), forall(member(P, Others), lacksCard(P, Card)).
+
+
+allPlayers(Players) :- findall(P, player(P), Players).
+
 
 %% Adds to DB knowledge gained from this round of my suggestion. TODO: make generic 'suggestion'. Have shorter version of mysuggestion that assumes me as the initiator.
 %% mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlauer, DisprovingCard).
 mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
 
-mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- has(DisprovingPlayer, DisprovingCard), !.
+mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- hasCard(DisprovingPlayer, DisprovingCard), !.
 mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- assert(has(DisprovingPlayer, DisprovingCard)), !.
 
 mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
-   lacksAll(InspectingPlayer, Character, Weapon, Room),
+   lacksTrio(InspectingPlayer, Character, Weapon, Room),
    next(InspectingPlayer, NextPlayer), !,
    mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
 
@@ -83,9 +93,9 @@ accusation(Character, Weapon, Room) :- noneHave(Character), noneHave(Weapon), no
 accusation(Character, Weapon, Room) :- allLack(Character), allLack(Weapon), allLack(Room).
 
 %% True when there are no players holding the given card
-allLack(Card) :- findall(P, player(P), Players), forall(member(Player, Players), lacks(Player, Card)).
+allLack(Card) :- allPlayers(Players), forall(member(Player, Players), lacks(Player, Card)).
 
-
+%% True when no players have this card.
 noneHave(Card) :- fail.
 
 

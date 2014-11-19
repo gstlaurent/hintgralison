@@ -69,7 +69,7 @@ maybeHas(Player, Card). % ????????
 
 
 has(Player, Card).
-maybe(Player, Card).    %
+maybe(Player, Card).    % we have reason to believe might have (ie, showed something to someone else)
 %% unkown(Player, Card).
 lacks(Player, Card).
 

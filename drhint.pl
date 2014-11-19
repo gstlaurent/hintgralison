@@ -1,4 +1,5 @@
-begin :- (dynamic has/2), (dynamic lacks/2), (dynamic maybe/2).
+:- dynamic has/2, lacks/2, maybe/2.
+
 % Test facts.
 
 character(scarlett).

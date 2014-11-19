@@ -67,3 +67,7 @@ mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, Dispro
    lacksAll(InspectingPlayer, Character, Weapon, Room),
    next(InspectingPlayer, NextPlayer), !,
    mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
+
+%% Produce True when the given variables are indisputedly in the Clue envelope.
+% TODO
+accusation(Character, Weapon, Room) :- fail.

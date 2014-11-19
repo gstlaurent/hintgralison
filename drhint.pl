@@ -50,8 +50,19 @@ next(mustard, scarlett).
 %% lacks(Player, Card) :- fail.
 %% maybe(Player, Card) :- fail.
 
-
-
+%% sample solution:
+lacks(white, green).
+lacks(white, study).
+lacks(white, knife).
+lacks(mustard, green).
+lacks(mustard, study).
+lacks(mustard, knife).
+lacks(scarlett, green).
+lacks(scarlett, study).
+lacks(scarlett, knife).
+lacks(plum, green).
+lacks(plum, study).
+lacks(plum, knife).
 
 
 
@@ -78,6 +89,9 @@ allPlayers(Players) :- findall(P, player(P), Players).
 
 %% Adds to DB knowledge gained from this round of my suggestion. TODO: make generic 'suggestion'. Have shorter version of mysuggestion that assumes me as the initiator.
 %% mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlauer, DisprovingCard).
+
+
+%%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
 mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
 
 mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- hasCard(DisprovingPlayer, DisprovingCard), !.
@@ -89,14 +103,14 @@ mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, Dispro
    mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
 
 %% Produce True when the given variables are indisputedly in the Clue envelope.
-accusation(Character, Weapon, Room) :- noneHave(Character), noneHave(Weapon), noneHave(Room).
-accusation(Character, Weapon, Room) :- allLack(Character), allLack(Weapon), allLack(Room).
+accusation(Character, Weapon, Room) :-
+   character(Character), allLack(Character),
+   weapon(Weapon), allLack(Weapon),
+   room(Room), allLack(Room).
 
 %% True when there are no players holding the given card
-allLack(Card) :- allPlayers(Players), forall(member(Player, Players), lacks(Player, Card)).
+allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
-%% True when no players have this card.
-noneHave(Card) :- fail.
 
 
 %% Listing might be handing for testing.

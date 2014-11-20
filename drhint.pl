@@ -71,34 +71,33 @@ card(X) :- character(X).
 card(X) :- weapon(X).
 card(X) :- room(X).
 
-lacksTrio(Player, Character, Weapon, Room) :-
-   lacksCard(Player, Character), lacksCard(Player, Weapon), lacksCard(Player, Room).
+assertLacksTrio(Player, Character, Weapon, Room) :-
+   assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
 
 
-%% lacksCard and hasCard creates proper assertions if necessary.
-lacksCard(Player, Card) :- lacks(Player, Card), !.
-lacksCard(Player, Card) :- assert(lacks(Player, Card)), !.
+%% assertLacks and assertHas creates proper assertions if necessary.
+assertLacks(Player, Card) :- lacks(Player, Card), !.
+assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
 
 %% Ensures other players lack the card, if neccessary.
-hasCard(Player, Card) :- has(Player, Card), !.
-hasCard(Player, Card) :- assert(has(Player, Card)), allPlayers(Players),
-   delete(Players, Player, Others), forall(member(P, Others), lacksCard(P, Card)).
+assertHas(Player, Card) :- has(Player, Card), !.
+assertHas(Player, Card) :- assert(has(Player, Card)), allPlayers(Players),
+   delete(Players, Player, Others), forall(member(P, Others), assertLacks(P, Card)).
 
 
 allPlayers(Players) :- findall(P, player(P), Players).
 
 
-%% Adds to DB knowledge gained from this round of my suggestion. TODO: make generic 'suggestion'. Have shorter version of mysuggestion that assumes me as the initiator.
-%% mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlauer, DisprovingCard).
-
-
+%% Adds to DB knowledge gained from this round of my suggestion.
+% TODO: make generic 'suggestion' that can assert maybes. Have shorter version, mysuggestion based on generic
 %%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
 mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
-mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- hasCard(DisprovingPlayer, DisprovingCard), !.
+mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- assertHas(DisprovingPlayer, DisprovingCard), !.
 mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
-   lacksTrio(InspectingPlayer, Character, Weapon, Room),
+   assertLacksTrio(InspectingPlayer, Character, Weapon, Room),
    next(InspectingPlayer, NextPlayer), !,
    mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
+
 
 %% Produce True when the given variables are indisputedly in the Clue envelope.
 accusation(Character, Weapon, Room) :-
@@ -111,5 +110,5 @@ allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Pla
 
 
 
-%% Listing might be handing for testing.
-%% listing(lacks(X,Y)).
+%% listings/0 is handy for testing.
+listings :- listing(lacks(_, _)), listing(has(_, _)).

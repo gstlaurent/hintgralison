@@ -94,10 +94,7 @@ allPlayers(Players) :- findall(P, player(P), Players).
 
 %%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
 mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
-
 mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- hasCard(DisprovingPlayer, DisprovingCard), !.
-mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- assert(has(DisprovingPlayer, DisprovingCard)), !.
-
 mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
    lacksTrio(InspectingPlayer, Character, Weapon, Room),
    next(InspectingPlayer, NextPlayer), !,

@@ -21,6 +21,7 @@ room(library).
 character(scarlett).
 player(scarlett).
 firstPlayer(plum).
+next(scarlett,plum).
 
 me(alison).
 
@@ -41,37 +42,40 @@ intro :-
 setup :-
     write('It\'s time to set up the game. When entering names for the rooms, weapons, and characters, make sure to begin with a lowercase letter, end with a period, and avoid using any punctuation or spaces before the final period.'), nl,
     write('Start by entering the names of all the rooms on your clue board.'), nl,
-    retractall(room(X)),
+    retractall(room(_)),
     getInfo(room), nl,
 
     write('Enter the names of all the weapons in the game.'), nl,
-    retractall(weapon(X)),
+    retractall(weapon(_)),
     getInfo(weapon), nl,
 
     write('Enter the names of all the characters in your game.'), nl,
     write('These are the names of all the people who may have committed the murder, not just the current players.'), nl,
-    retractall(character(X)),
+    retractall(character(_)),
     getInfo(character), nl,
 
-    write('Next, enter the players, starting with the player who will go first.'), nl,
-    retractall(next(X,Y)),
-    retractall(player(X)),
-    retractall(firstPlayer(X)),
+    write('Next, enter the players, and how many cards each has, starting with the player who will go first.'), nl,
+    retractall(next(_,_)),
+    retractall(player(_)),
+    retractall(firstPlayer(_)),
+    retractall(numCards(_)),
     getPlayers, nl,
 
     write('Which player are you?'), nl,
-    retractall(me(X)),
+    retractall(me(_)),
     getMyName,
 
     write('Now, enter your cards.'), nl,
-    retractall(has(X,Y)),
+    retractall(has(_,_)),
     getInfo(card), nl, 
     % TODO enter the number of cards each player has
+
+
     write('It\'s time to begin the game!'), nl. %TODO lead into the gameplay here*/
 
 getInfo(Type) :-
     % why does writeln write the commas?!?!
-    %writeln(['Enter the name of a ', Type, ' or "done." if there are no more ', Type, 's.']), nl,nl.
+    %writeln(['Enter a ', Type, ' or "done." if there are no more ', Type, 's.']), nl,nl.
     write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
     write(Type), write('s: '),
     read(Entry),
@@ -88,16 +92,22 @@ input(card,_) :- write('That\'s not a valid card. '), nl, listCards, getInfo(car
 
 getPlayers :-
     write('Enter first player: '), readline(First),
+    write('How many cards does this player have? '), readline(N1),
     write('Enter next player: '), readline(Next),
+    write('How many cards does this player have? '), readline(N2),
     assert(player(First)),
+    assert(numCards(First,N1)),
     assert(firstPlayer(First)),
     assert(next(First, Next)),
+    assert(numCards(Next, N2)),
     assertNextPlayer(First, First, Next).
 
 assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     assert(next(Previous, Current)),
+    write('How many cards does this player have? '), readline(N),
     assert(player(Current)),
+    assert(numCards(current, N)),
     write('Enter next player (or "done." if no more): '),
     read(Next), assertNextPlayer(First, Current, Next).
 

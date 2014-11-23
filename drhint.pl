@@ -34,24 +34,13 @@ clue :-
     write('Welcome to Dr. Clue!'), nl,
     write('To begin, we will lead you through the initialization of the game.'), nl,
     setup,
-    write("Setup is complete. It's time to begin the game!"), nl,
-    write('Whenever you wish to see the database, type "db"'), nl,
+    write('Setup is complete. It\'s time to begin the game!'), nl,
     gameLoop.
-
-%%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
-intro :-
-    write('Welcome to Dr. Clue!'),
-    help,
-    write('If you need help, type "help." This will let you know what commands are available.'), nl,
-    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl,
-    setup.
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO better wording of instructions.
 setup :-
-    write('It\'s time to set up the game. When entering names for the rooms, weapons, and characters, make sure to begin with a lowercase letter, end with a period, and avoid using any punctuation or spaces before the final period.'), nl,
     write('Start by entering the names of all the rooms on your clue board.'), nl,
     retractall(room(_)),
     getInfo(room), nl,
@@ -83,12 +72,12 @@ setup :-
 
 
 getInfo(Type) :-
-    write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
+    write('Enter the name of a '), write(Type), write(' or hit ENTER if there are no more '),
     write(Type), write('s: '),
-    read(Entry),
+    readline(Entry),
     input(Type, Entry).
 
-input(_, done) :- !.
+input(_, '') :- !.
 input(room,X) :- assert(room(X)), getInfo(room).
 input(weapon,X) :- assert(weapon(X)), getInfo(weapon).
 input(character,X) :- assert(character(X)), getInfo(character).
@@ -107,25 +96,25 @@ getPlayers :-
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
 
-assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
+assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     write('How many cards does this player have? '), readline(N),
     assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
-    write('Enter next player (or "done." if no more): '),
-    read(Next), assertNextPlayer(First, Current, Next).
+    write('Enter next player or hit ENTER if there are no more players: '),
+    readline(Next), assertNextPlayer(First, Current, Next).
 
-getMyName :- read(Character), inputMyName(Character).
+getMyName :- readline(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-showDatabase :- listAllCards, listPlayers, listHasCards, listAllPlayerCards.
+showDatabase :- listAllCards, listPlayers, listAllPlayerCards.
 
-listAllCards :- listCards(room), listCards(weapon), listCards(character).
+listAllCards :- listCards(character), listCards(weapon), listCards(room).
 
 listCards(Type) :- findall(C, call(Type, C), Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
 
@@ -155,8 +144,6 @@ accusescript(Character, Weapon, Room) :-
   write('********I accuse '), write(CHARACTER), write(' of murdering somebody in the '),
   write(ROOM), write(' with the '), write(WEAPON), write('!********'),
   nl, writeln('*******************************************************************************************').
-
-
 
 
 
@@ -279,13 +266,23 @@ listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 %% Starting the fun game!
 
+suggestionPrompt :-
+    write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
+    readline(X),
+    getSuggestion(X).
 
-makesuggestion :-
-    write('When it is your turn to make a suggestion, hit enter.'),
-    readline(Ignore),
+getSuggestion(db) :- showDatabase, suggestionPrompt.
+getSuggestion('') :-
     write('Enter your CHARACTER suggestion: '), readline(Character),
     write('Enter your WEAPON suggestion: '), readline(Weapon),
     write('Enter your ROOM suggestion: '), readline(Room),
+    validateSuggestion(Character,Weapon,Room).
+
+validateSuggestion(Character, Weapon, Room) :-
+    character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Character,Weapon,Room).
+validateSuggestion(_,_,_) :- write('That is not a valid suggestion'), listAllCards, suggestionPrompt.
+
+makeSuggestion(Character,Weapon,Room) :-    
     write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
     readline(Player),
     write('Name the CARD that you were shown (or just hit ENTER if no one could show you anything): '),

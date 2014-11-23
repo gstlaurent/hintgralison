@@ -78,6 +78,7 @@ setup :-
 
     write('Now, enter your cards.'), nl,
     retractall(has(_,_)),
+    retractall(lacks(_,_)),
     getInfo(card), nl, 
     % TODO enter the number of cards each player has
 
@@ -99,7 +100,7 @@ input(character,X) :- assert(character(X)), getInfo(character).
 input(card,X) :- room(X),!, me(Y), assertHas(Y,X), getInfo(card).
 input(card,X) :- weapon(X),!, me(Y), assertHas(Y,X), getInfo(card).
 input(card,X) :- character(X),!, me(Y), assertHas(Y,X), getInfo(card).
-input(card,_) :- write('That\'s not a valid card. '), nl, listCards, getInfo(card).
+input(card,_) :- write('That\'s not a valid card. '), nl, listAllCards, getInfo(card).
 
 getPlayers :-
     write('Enter first player: '), readline(First),

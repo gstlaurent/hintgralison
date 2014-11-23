@@ -36,8 +36,7 @@ clue :-
     write('Welcome to Dr. Clue!'), nl,
     write('To begin, we will lead you through the initialization of the game.'), nl,
     setup,
-    write("Setup is complete. It's time to begin the game!"), nl,
-    write('Whenever you wish to see the database, type "db"'), nl,
+    write('Setup is complete. It\'s time to begin the game!'), nl,
     gameLoop.
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,12 +74,12 @@ setup :-
 
 
 getInfo(Type) :-
-    write('Enter the name of a '), write(Type), write(' or "done" if there are no more '),
+    write('Enter the name of a '), write(Type), write(' or hit ENTER if there are no more '),
     write(Type), write('s: '),
     readline(Entry),
     input(Type, Entry).
 
-input(_, done) :- !.
+input(_, '') :- !.
 input(room,X) :- assert(room(X)), getInfo(room).
 input(weapon,X) :- assert(weapon(X)), getInfo(weapon).
 input(character,X) :- assert(character(X)), getInfo(character).
@@ -99,13 +98,13 @@ getPlayers :-
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
 
-assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
+assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     write('How many cards does this player have? '), readline(N),
     assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
-    write('Enter next player (or "done." if no more): '),
+    write('Enter next player or hit ENTER if there are no more players: '),
     readline(Next), assertNextPlayer(First, Current, Next).
 
 getMyName :- readline(Character), inputMyName(Character).
@@ -115,7 +114,7 @@ inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMy
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-showDatabase :- listAllCards, listPlayers, listHasCards, listAllPlayerCards.
+showDatabase :- listAllCards, listPlayers, listAllPlayerCards.
 
 listAllCards :- listCards(room), listCards(weapon), listCards(character).
 
@@ -136,7 +135,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gameLoop :- makesuggestion.
+gameLoop :- suggestionPrompt.
 
 
 %%%%%%%%%%%%%%%%%%%%%%% ??? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,10 +256,13 @@ listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 %% Starting the fun game!
 
+suggestionPrompt :-
+    write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
+    readline(X),
+    makesuggestion(X).
 
-makesuggestion :-
-    write('When it is your turn to make a suggestion, hit enter.'),
-    readline(Ignore),
+makesuggestion(db) :- showDatabase, suggestionPrompt.
+makesuggestion('') :-
     write('Enter your CHARACTER suggestion: '), readline(Character),
     write('Enter your WEAPON suggestion: '), readline(Weapon),
     write('Enter your ROOM suggestion: '), readline(Room),

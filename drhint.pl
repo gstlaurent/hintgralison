@@ -11,16 +11,12 @@
    location/2,
    next/2,
    firstPlayer/1.
-  
-
 
 %TODO:
 % switch from read to readline
 
 %% IF LOTS LOF EXTRA TIME:
 %% auto generate number of cards per player
-
-
 
 /*
 Examples of all the types of facts
@@ -31,12 +27,18 @@ character(scarlett).
 player(scarlett).
 firstPlayer(plum).
 next(scarlett,plum).
-
 me(alison).
 
 */
 
-clue :- intro.
+% TODO write better intro to the game. 
+clue :-
+    write('Welcome to Dr. Clue!'), nl,
+    write('To begin, we will lead you through the initialization of the game.'), nl,
+    setup,
+    write("Setup is complete. It's time to begin the game!"), nl,
+    write('Whenever you wish to see the database, type "db"'), nl,
+    gameLoop.
 
 %%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
@@ -79,15 +81,10 @@ setup :-
     write('Now, enter your cards.'), nl,
     retractall(has(_,_)),
     retractall(lacks(_,_)),
-    getInfo(card), nl, 
-    % TODO enter the number of cards each player has
+    getInfo(card), nl.
 
-
-    write('It\'s time to begin the game!'), nl. %TODO lead into the gameplay here*/
 
 getInfo(Type) :-
-    % why does writeln write the commas?!?!
-    %writeln(['Enter a ', Type, ' or "done." if there are no more ', Type, 's.']), nl,nl.
     write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
     write(Type), write('s: '),
     read(Entry),
@@ -125,15 +122,8 @@ getMyName :- read(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 
-%%%%%%%%%%%%%%%%%%%%%%%% HELP COMMAND %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-help :-
-    write('You may enter any of the following commands:'), nl,nl,
-    write('"showDatabase." - List all the information that is currently known.'), nl,nl,
-    write('"setup." - This command only needs to be run once. It will let you initialize the game with the rooms, weapons, and characters, and players in your game.'), nl,nl,
-    write('"listPlayers." - Lists all the players in the game'), nl,nl,
-    write('"listAllCards." - Lists all the cards in the game'), nl,nl.
-    
-%etc. add commands as they are created.
+
+%%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 showDatabase :- listAllCards, listPlayers, listHasCards, listAllPlayerCards.
 
@@ -145,16 +135,21 @@ listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players)
 
 listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
 
-listPlayerCards(Player) :- allHas(Player, HasCards), write(Player), write(' has these cards: '),
+listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' has these cards: '),
                            writeln(HasCards),
-                           allLacking(Player, LacksCards), write(Player),
+                           lacksAll(Player, LacksCards), write(Player),
                            write(' does not have any of these cards: '), writeln(LacksCards), nl.
 
-allHas(Player, Cards) :- findall(C, has(Player, C), Cards).
-allLacking(Player, Cards) :- findall(C, lacks(Player, C), Cards).
+hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
+lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 
-ps :- listing(player(X)).
+%%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+gameLoop :- makesuggestion.
+
+
+%%%%%%%%%%%%%%%%%%%%%%% ??? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 %% writeline(String) :- writef("%s", [String]).
@@ -198,7 +193,7 @@ dead('mustard').
 
 me('plum').
 
-% mext(CurrentPlayer, NextPlayer).
+% next(CurrentPlayer, NextPlayer).
 next('scarlett', 'plum').
 next('plum', 'white').
 next('white', 'mustard').
@@ -223,13 +218,12 @@ lacks('plum', 'study').
 lacks('plum', 'knife').
 
 
-
 card(X) :- character(X).
 card(X) :- weapon(X).
 card(X) :- room(X).
 
 assertLacksTrio(Player, Character, Weapon, Room) :-
-   assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
+    assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
 
 
 %% assertLacks and assertHas creates proper assertions if necessary.
@@ -271,7 +265,6 @@ allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Pla
 listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 
-
 %% Starting the fun game!
 
 
@@ -309,5 +302,4 @@ normalizePlayer(PotentialPlayer, PlayerOrNone) :- PlayerOrNone = PotentialPlayer
 %%     write('Sorry but that is not a valid '), write(Goal),
 %%     listCards(Goal),
 %%     promptTilValid(Prompt, Goal, Input).
-
 

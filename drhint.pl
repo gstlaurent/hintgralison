@@ -164,29 +164,29 @@ writeline(String) :- write(String).
 
 % Test facts.
 
-character(scarlett).
-character(plum).
-character(peacock).
-character(green).
-character(mustard).
-character(white).
+character("scarlett").
+character("plum").
+character("peacock").
+character("green").
+character("mustard").
+character("white").
 
-weapon(candlestick).
-weapon(knife).
-weapon(leadpipe).
-weapon(revolver).
-weapon(rope).
-weapon(wrench).
+weapon("candlestick").
+weapon("knife").
+weapon("leadpipe").
+weapon("revolver").
+weapon("rope").
+weapon("wrench").
 
-room(kitchen).
-room(ballroom).
-room(conservatory).
-room(dining).
-room(billiard).
-room(library).
-room(study).
-room(hall).
-room(lounge).
+room("kitchen").
+room("ballroom").
+room("conservatory").
+room("dining").
+room("billiard").
+room("library").
+room("study").
+room("hall").
+room("lounge").
 
 % our test game has only four players
 %% player(scarlett).
@@ -194,9 +194,9 @@ room(lounge).
 %% player(white).
 %% player(mustard).
 
-dead(mustard).
+dead("mustard").
 
-me(plum).
+me("plum").
 
 %% has(plum, )
 
@@ -204,28 +204,28 @@ me(plum).
 
 
 % mext(CurrentPlayer, NextPlayer).
-next(scarlett, plum).
-next(plum, white).
-next(white, mustard).
-next(mustard, scarlett).
+next("scarlett", "plum").
+next("plum", "white").
+next("white", "mustard").
+next("mustard", "scarlett").
 
 %% has(Player, Card) :- fail.
 %% lacks(Player, Card) :- fail.
 %% maybe(Player, Card) :- fail.
 
 %% sample solution:
-lacks(white, green).
-lacks(white, study).
-lacks(white, knife).
-lacks(mustard, green).
-lacks(mustard, study).
-lacks(mustard, knife).
-lacks(scarlett, green).
-lacks(scarlett, study).
-lacks(scarlett, knife).
-lacks(plum, green).
-lacks(plum, study).
-lacks(plum, knife).
+lacks("white", "green").
+lacks("white", "study").
+lacks("white", "knife").
+lacks("mustard", "green").
+lacks("mustard", "study").
+lacks("mustard", "knife").
+lacks("scarlett", "green").
+lacks("scarlett", "study").
+lacks("scarlett", "knife").
+lacks("plum", "green").
+lacks("plum", "study").
+lacks("plum", "knife").
 
 
 

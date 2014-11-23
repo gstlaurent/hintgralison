@@ -70,7 +70,7 @@ setup :-
     retractall(numCards(_)),
     getPlayers, nl,
 
-    write('Which player are you?'), nl,
+    write('Which player are you? '),
     retractall(me(_)),
     getMyName,
 
@@ -103,21 +103,19 @@ getPlayers :-
     write('Enter first player: '), readline(First),
     write('How many cards does this player have? '), readline(N1),
     write('Enter next player: '), readline(Next),
-    write('How many cards does this player have? '), readline(N2),
     assert(player(First)),
     assert(numCards(First,N1)),
     assert(firstPlayer(First)),
     assert(next(First, Next)),
-    assert(numCards(Next, N2)),
     assertNextPlayer(First, First, Next).
 
 assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
+    write('How many cards does this player have? '), readline(N),
+    assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter next player (or "done." if no more): '),
-    write('How many cards does this player have? '), readline(N),
-    assert(numCards(current, N)),
     read(Next), assertNextPlayer(First, Current, Next).
 
 getMyName :- read(Character), inputMyName(Character).
@@ -130,17 +128,28 @@ help :-
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,
     write('"setup." - This command only needs to be run once. It will let you initialize the game with the rooms, weapons, and characters, and players in your game.'), nl,nl,
     write('"listPlayers." - Lists all the players in the game'), nl,nl,
-    write('"listCards." - Lists all the cards in the game'), nl,nl.
+    write('"listAllCards." - Lists all the cards in the game'), nl,nl.
     
 %etc. add commands as they are created.
 
-showDatabase :- true.
+showDatabase :- listAllCards, listPlayers, listHasCards, listAllPlayerCards.
 
-listCards :- listRooms, listWeapons, listCharacters.
-listRooms :- findall(R, room(R), Rooms), write('The rooms are: '), writeln(Rooms),nl.
-listWeapons :- findall(W, weapon(W), Weapons), write('The weapons are: '), writeln(Weapons),nl.
-listCharacters :- findall(C, character(C), Characters), write('The characters are: '), writeln(Characters),nl.
+listAllCards :- listCards(room), listCards(weapon), listCards(character).
+
+listCards(Type) :- findall(C, call(Type, C), Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
+
 listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
+
+listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
+
+listPlayerCards(Player) :- allHas(Player, HasCards), write(Player), write(' has these cards: '),
+                           writeln(HasCards),
+                           allLacking(Player, LacksCards), write(Player),
+                           write(' does not have any of these cards: '), writeln(LacksCards), nl.
+
+allHas(Player, Cards) :- findall(C, has(Player, C), Cards).
+allLacking(Player, Cards) :- findall(C, lacks(Player, C), Cards).
+
 
 ps :- listing(player(X)).
 

@@ -27,14 +27,14 @@ me(alison).
 
 */
 
-clue :- intro.
-
 %%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
-intro :-
+% TODO write better intro to the game. 
+clue :-
     write('Welcome to Dr. Clue!'), nl,
-    write('If you need help, type "help." This will let you know what commands are available.'), nl,
-    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl.    
+    write('To begin, we will lead you through the initialization of the game.'), nl,
+    setup,
+    write('Setup is complete. Whenever you wish to see the database, type "db"'), nl,
+    gameLoop.
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -69,14 +69,10 @@ setup :-
     retractall(has(_,_)),
     retractall(lacks(_,_)),
     getInfo(card), nl, 
-    % TODO enter the number of cards each player has
-
 
     write('It\'s time to begin the game!'), nl. %TODO lead into the gameplay here*/
 
 getInfo(Type) :-
-    % why does writeln write the commas?!?!
-    %writeln(['Enter a ', Type, ' or "done." if there are no more ', Type, 's.']), nl,nl.
     write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
     write(Type), write('s: '),
     read(Entry),
@@ -114,7 +110,9 @@ getMyName :- read(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 
-%%%%%%%%%%%%%%%%%%%%%%%% HELP COMMAND %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 help :-
     write('You may enter any of the following commands:'), nl,nl,
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,

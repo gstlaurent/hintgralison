@@ -156,7 +156,7 @@ allLacking(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 ps :- listing(player(X)).
 
-readline(String) :- read_line(Input), string_codes(String, Input).
+readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 %% writeline(String) :- writef("%s", [String]).
 writeline(String) :- write(String).
 
@@ -164,68 +164,63 @@ writeline(String) :- write(String).
 
 % Test facts.
 
-character("scarlett").
-character("plum").
-character("peacock").
-character("green").
-character("mustard").
-character("white").
+character('scarlett').
+character('plum').
+character('peacock').
+character('green').
+character('mustard').
+character('white').
 
-weapon("candlestick").
-weapon("knife").
-weapon("leadpipe").
-weapon("revolver").
-weapon("rope").
-weapon("wrench").
+weapon('candlestick').
+weapon('knife').
+weapon('leadpipe').
+weapon('revolver').
+weapon('rope').
+weapon('wrench').
 
-room("kitchen").
-room("ballroom").
-room("conservatory").
-room("dining").
-room("billiard").
-room("library").
-room("study").
-room("hall").
-room("lounge").
+room('kitchen').
+room('ballroom').
+room('conservatory').
+room('dining').
+room('billiard').
+room('library').
+room('study').
+room('hall').
+room('lounge').
 
 % our test game has only four players
-%% player(scarlett).
-%% player(plum).
-%% player(white).
-%% player(mustard).
+player('scarlett').
+player('plum').
+player('white').
+player('mustard').
 
-dead("mustard").
+dead('mustard').
 
-me("plum").
-
-%% has(plum, )
-
-
-
+me('plum').
 
 % mext(CurrentPlayer, NextPlayer).
-next("scarlett", "plum").
-next("plum", "white").
-next("white", "mustard").
-next("mustard", "scarlett").
+next('scarlett', 'plum').
+next('plum', 'white').
+next('white', 'mustard').
+next('mustard', 'scarlett').
 
 %% has(Player, Card) :- fail.
 %% lacks(Player, Card) :- fail.
 %% maybe(Player, Card) :- fail.
 
 %% sample solution:
-lacks("white", "green").
-lacks("white", "study").
-lacks("white", "knife").
-lacks("mustard", "green").
-lacks("mustard", "study").
-lacks("mustard", "knife").
-lacks("scarlett", "green").
-lacks("scarlett", "study").
-lacks("scarlett", "knife").
-lacks("plum", "green").
-lacks("plum", "study").
-lacks("plum", "knife").
+lacks('white', 'green').
+lacks('white', 'study').
+lacks('white', 'knife').
+lacks('mustard', 'green').
+lacks('mustard', 'study').
+lacks('mustard', 'knife').
+lacks('scarlett', 'green').
+lacks('scarlett', 'study').
+lacks('scarlett', 'knife').
+lacks('plum', 'green').
+lacks('plum', 'study').
+lacks('plum', 'knife').
 
 
 
@@ -293,6 +288,10 @@ makesuggestion :-
     normalizePlayer(Player, PlayerOrNone),
     me(Me), next(Me, PlayerToLeft),
     mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
+
+normalizePlayer(PotentialPlayer, PlayerOrNone) :-
+    not(player(PotentialPlayer)), PlayerOrNone = none.
+normalizePlayer(PotentialPlayer, PlayerOrNone) :- PlayerOrNone = PotentialPlayer.
 
 
 

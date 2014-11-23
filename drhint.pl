@@ -114,10 +114,10 @@ getPlayers :-
 assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     assert(next(Previous, Current)),
-    write('How many cards does this player have? '), readline(N),
     assert(player(Current)),
-    assert(numCards(current, N)),
     write('Enter next player (or "done." if no more): '),
+    write('How many cards does this player have? '), readline(N),
+    assert(numCards(current, N)),
     read(Next), assertNextPlayer(First, Current, Next).
 
 getMyName :- read(Character), inputMyName(Character).

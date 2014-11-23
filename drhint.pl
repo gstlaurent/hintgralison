@@ -40,20 +40,10 @@ clue :-
     write('Whenever you wish to see the database, type "db"'), nl,
     gameLoop.
 
-%%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
-intro :-
-    write('Welcome to Dr. Clue!'),
-    help,
-    write('If you need help, type "help." This will let you know what commands are available.'), nl,
-    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl,
-    setup.
-
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO better wording of instructions.
 setup :-
-    write('It\'s time to set up the game. When entering names for the rooms, weapons, and characters, make sure to begin with a lowercase letter, end with a period, and avoid using any punctuation or spaces before the final period.'), nl,
     write('Start by entering the names of all the rooms on your clue board.'), nl,
     retractall(room(_)),
     getInfo(room), nl,
@@ -85,9 +75,9 @@ setup :-
 
 
 getInfo(Type) :-
-    write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
+    write('Enter the name of a '), write(Type), write(' or "done" if there are no more '),
     write(Type), write('s: '),
-    read(Entry),
+    readline(Entry),
     input(Type, Entry).
 
 input(_, done) :- !.
@@ -116,9 +106,9 @@ assertNextPlayer(First, Previous, Current) :-
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter next player (or "done." if no more): '),
-    read(Next), assertNextPlayer(First, Current, Next).
+    readline(Next), assertNextPlayer(First, Current, Next).
 
-getMyName :- read(Character), inputMyName(Character).
+getMyName :- readline(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 

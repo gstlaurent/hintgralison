@@ -1,4 +1,4 @@
-%% :- expects_dialect(sicstus).
+:- expects_dialect(sicstus).
 
 :- dynamic has/2, lacks/2, maybe/2.
 
@@ -12,6 +12,15 @@
    dead/1,
    location/2,
    next/2.
+
+
+%TODO:
+% switch from read to readline
+
+%% IF LOTS LOF EXTRA TIME:
+%% auto generate number of cards per player
+
+
 
 /*
 Examples of all the types of facts
@@ -151,7 +160,10 @@ listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players)
 
 ps :- listing(player(X)).
 
-readline(X) :- read(X).
+readline(String) :- read_line(Input), string_codes(String, Input).
+%% writeline(String) :- writef("%s", [String]).
+writeline(String) :- write(String).
+
 
 addPlayers :-
     write('Enter first player:'), readline(First),
@@ -283,3 +295,9 @@ allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Pla
 
 %% listings/0 is handy for testing.
 listings :- listing(lacks(_, _)), listing(has(_, _)).
+
+
+
+%% Starting the fun game!
+
+%% makesuggestion :- 

@@ -32,7 +32,7 @@ test(X) :- bill(X), asserta(joe(X)).
 %%     - view database contents (dismissed/exonerated cardsbytype, pending/suspect/curious cardsbytype)
 %%     - output an accusation when known
 
-%% better
+%% betterassert
 %%     - input other players suggestions and if a player showed them a card
 %%         (output what card should I show them?)
 %%     - output what my next suggestion should be

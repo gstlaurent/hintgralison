@@ -119,7 +119,8 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% If an accusation can be made, let the player know immediately, instead of waiting for their turn.
+suggestionPrompt :- accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
 suggestionPrompt :-
     write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
     readline(X),
@@ -127,8 +128,6 @@ suggestionPrompt :-
     suggestionPrompt.
 
 getSuggestion(db) :- showDatabase, suggestionPrompt.
-% If an accusation can be made, let the player know instead of asking them for their suggestion.
-getSuggestion(_) :- accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
 getSuggestion('') :-
     write('Enter your CHARACTER suggestion: '), readline(Character),
     write('Enter your WEAPON suggestion: '), readline(Weapon),
@@ -191,13 +190,13 @@ accusescript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
   nl,
   writeln('You should make an accusation! Shout out the following now:'),
-  writeln('***********************************************************************************************'),
-  write('********I accuse '), write(CHARACTER), write(' of murdering somebody in the '),
-  write(ROOM), write(' with the '), write(WEAPON), write('!********'),
+  writeln('*******************************************************************************************'),
+  write('*********** I accuse '), write(CHARACTER), write(' of murdering somebody in the '),
+  write(ROOM), write(' with the '), write(WEAPON), write('! *************'),
   nl, writeln('*******************************************************************************************').
 
 
-%%%%%%%%%%%%%%%%%%%%%%% HELPER FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%% UTILITY FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 %% writeline(String) :- writef("%s", [String]).
@@ -248,6 +247,10 @@ next('scarlett', 'plum').
 next('plum', 'white').
 next('white', 'mustard').
 next('mustard', 'scarlett').
+
+
+%% has(plum, mustard).
+%% has(plum, )
 
 %% has(Player, Card) :- fail.
 %% lacks(Player, Card) :- fail.

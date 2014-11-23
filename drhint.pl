@@ -41,9 +41,11 @@ clue :- intro.
 %%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
 intro :-
-    write('Welcome to Dr. Clue!'), nl,
+    write('Welcome to Dr. Clue!'),
+    help,
     write('If you need help, type "help." This will let you know what commands are available.'), nl,
-    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl.    
+    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl,
+    setup,
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -276,4 +278,39 @@ listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 %% Starting the fun game!
 
-%% makesuggestion :- 
+makesuggestion :-
+    write('When it is your turn to make a suggestion, hit enter.'),
+    readline(Ignore),
+    promptTilValid('Enter your CHARACTER suggestion: ', character, Character).
+
+    %% write('Enter your CHARACTER suggestion: '), readline(Character),
+    %% write('Enter your WEAPON suggestion: '), readline(Weapon),
+    %% write('Enter your ROOM suggestion: '), readline(Room),
+
+listCards(CardType) :-
+    findall(Card, call(CardType, Card), Cards),
+    write('The '), write(CardType), write('s are: '), writeln(Cards), nl.
+
+
+
+promptTilValid(Prompt, Goal, Input) :-
+    write(Prompt),
+    readline(Input),
+    verified(Prompt, Goal, Input).
+
+verified(Prompt, Goal, Input) :-
+    
+
+    inputIsGoal(Goal, Input),
+
+
+    call(Goal, Input), !.
+
+promptTilValid(Prompt, Goal, Input) :-
+    write(Prompt),
+    readline(Input), !,
+    not(call(Goal, Input)),
+    write('Sorry but that is not a valid '), write(Goal),
+    listCards(Goal), !,  promptTilValid(Prompt, Goal, Input).
+
+

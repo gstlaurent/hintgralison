@@ -12,11 +12,9 @@
    next/2,
    firstPlayer/1.
 
-%TODO:
-% switch from read to readline
-
 %% IF LOTS LOF EXTRA TIME:
 %% auto generate number of cards per player
+%% Make generic change so ENTER can finish things.
 
 /*
 Examples of all the types of facts
@@ -146,7 +144,20 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gameLoop :- makesuggestion.
+gameLoop :-
+  makesuggestion, accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
+
+accusescript(Character, Weapon, Room) :-
+  upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
+  nl,
+  writeln('You should make an accusation! Shout out the following now:'),
+  writeln('***********************************************************************************************'),
+  write('********I accuse '), write(CHARACTER), write(' of murdering somebody in the '),
+  write(ROOM), write(' with the '), write(WEAPON), write('!********'),
+  nl, writeln('*******************************************************************************************').
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%% ??? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -213,6 +224,7 @@ next('mustard', 'scarlett').
 %% lacks('scarlett', 'green').
 %% lacks('scarlett', 'study').
 %% lacks('scarlett', 'knife').
+
 %% lacks('plum', 'green').
 %% lacks('plum', 'study').
 %% lacks('plum', 'knife').
@@ -276,7 +288,7 @@ makesuggestion :-
     write('Enter your ROOM suggestion: '), readline(Room),
     write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
     readline(Player),
-    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anithing): '),
+    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anything): '),
     readline(Card),
     normalizePlayer(Player, PlayerOrNone),
     me(Me), next(Me, PlayerToLeft),

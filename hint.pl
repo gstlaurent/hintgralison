@@ -36,6 +36,7 @@ test(X) :- bill(X), asserta(joe(X)).
 %%     - input other players suggestions and if a player showed them a card
 %%         (output what card should I show them?)
 %%     - output what my next suggestion should be
+%%     - handle a wrong accusation from another player
 
 %% best
 %%     - monitor other players (build models for them too)

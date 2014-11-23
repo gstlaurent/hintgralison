@@ -151,24 +151,24 @@ listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players)
 
 ps :- listing(player(X)).
 
+readline(X) :- read(X).
 
 addPlayers :-
-    write('Enter first player:'), readln(First),
-    write('Enter next player:'), readln(Next),
+    write('Enter first player:'), readline(First),
+    write('Enter next player:'), readline(Next),
     assertNextPlayer(First, First, Next).
 
 assertNextPlayer(First, Last, []) :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     assert(next(Previous, Current)),
     write('Enter next player (or just hit enter if no more):'),
-    readln(Next), assertNextPlayer(First, Current, Next).
+    readline(Next), assertNextPlayer(First, Current, Next).
 
 %% addPlayer(Previous) :-
 %%     write('Enter the next player:'),
 %%     readln(Next), assert(next(Previous, Next)), addPlayer(Next).
 
 
-readline(X) :- readln(X:Xs),  .
 
 
 % Test facts.

@@ -6,12 +6,12 @@
    weapon/1,
    character/1,
    player/1,
-   numPlayers/1,
-   playerNum/2,
    me/1,
    dead/1,
    location/2,
-   next/2.
+   next/2,
+   firstPlayer/1.
+  
 
 /*
 Examples of all the types of facts
@@ -20,11 +20,9 @@ weapon(knife).
 room(library).
 character(scarlett).
 player(scarlett).
+firstPlayer(plum).
 
-numPlayers(3).
-playerNum(1, scarlett).
-validNum(2).
-me(scarlett).
+me(alison).
 
 */
 
@@ -43,26 +41,30 @@ intro :-
 setup :-
     write('It\'s time to set up the game. When entering names for the rooms, weapons, and characters, make sure to begin with a lowercase letter, end with a period, and avoid using any punctuation or spaces before the final period.'), nl,
     write('Start by entering the names of all the rooms on your clue board.'), nl,
+    retractall(room(X)),
     getInfo(room), nl,
 
     write('Enter the names of all the weapons in the game.'), nl,
+    retractall(weapon(X)),
     getInfo(weapon), nl,
 
     write('Enter the names of all the characters in your game.'), nl,
     write('These are the names of all the people who may have committed the murder, not just the current players.'), nl,
+    retractall(character(X)),
     getInfo(character), nl,
 
-    write('How many people are playing? Enter a number from 2 to 6.'), nl,
-    getNumPlayers, nl,
-
     write('Next, enter the players, starting with the player who will go first.'), nl,
-    write('Use the name of a person\'s character to identify them.'), nl, 
-    getPlayer(1), nl,
+    retractall(next(X,Y)),
+    retractall(player(X)),
+    retractall(firstPlayer(X)),
+    getPlayers, nl,
 
-    write('Which character are you playing?'), nl,
+    write('Which player are you?'), nl,
+    retractall(me(X)),
     getMyName,
 
     write('Now, enter your cards.'), nl,
+    retractall(has(X,Y)),
     getInfo(card), nl, 
     % TODO enter the number of cards each player has
     write('It\'s time to begin the game!'), nl. %TODO lead into the gameplay here*/
@@ -71,7 +73,7 @@ getInfo(Type) :-
     % why does writeln write the commas?!?!
     %writeln(['Enter the name of a ', Type, ' or "done." if there are no more ', Type, 's.']), nl,nl.
     write('Enter the name of a '), write(Type), write(' or "done." if there are no more '),
-    write(Type), write('s.'), nl, nl,
+    write(Type), write('s: '),
     read(Entry),
     input(Type, Entry).
 
@@ -79,96 +81,51 @@ input(_, done) :- !.
 input(room,X) :- assert(room(X)), getInfo(room).
 input(weapon,X) :- assert(weapon(X)), getInfo(weapon).
 input(character,X) :- assert(character(X)), getInfo(character).
-input(player,X) :- character(X),!, assert(player(X)), getInfo(player).
-input(player,_) :- write('That\'s not a valid character name. Please try again.'), nl, %TODO write the valid character names.
-                   getInfo(player).
-input(card,X) :- room(X),!, me(Y), hasCard(Y,X), getInfo(card).
-input(card,X) :- weapon(X),!, me(Y), hasCard(Y,X), getInfo(card).
-input(card,X) :- character(X),!, me(Y), hasCard(Y,X), getInfo(card).
-input(card,_) :- write('That\'s not a valid card. Please try again.'), nl, getInfo(card). %TODO write the valid card names
+input(card,X) :- room(X),!, me(Y), assertHas(Y,X), getInfo(card).
+input(card,X) :- weapon(X),!, me(Y), assertHas(Y,X), getInfo(card).
+input(card,X) :- character(X),!, me(Y), assertHas(Y,X), getInfo(card).
+input(card,_) :- write('That\'s not a valid card. '), nl, listCards, getInfo(card).
 
-getNumPlayers :- read(Number), setPlayersTo(Number).
+getPlayers :-
+    write('Enter first player: '), readline(First),
+    write('Enter next player: '), readline(Next),
+    assert(player(First)),
+    assert(firstPlayer(First)),
+    assert(next(First, Next)),
+    assertNextPlayer(First, First, Next).
 
-setPlayersTo(Number) :- validNum(Number),!, assert(numPlayers(Number)).
-setPlayersTo(_) :- write('That is not a valid number. Please try again.'), nl,
-                   getNumPlayers.
-
-% How many players can play a game of clue.
-validNum(2).
-validNum(3).
-validNum(4).
-validNum(5).
-validNum(6).
-
-getPlayer(N) :-
-    numPlayers(X),
-    N == X, !,
-    write('Which character is player '), write(N), write('?'), nl,
-    read(Player),
-    input(Player,N).
-getPlayer(N) :-
-    nextPlayer(N,M),
-    write('Which character is player '), write(N), write('?'), nl,
-    read(Player),
-    input(Player,N),
-    getPlayer(M).
-
-inputPlayer(Player,N) :- character(Player), !, assert(playerNum(N, Player)).
-inputPlayer(_,N) :-
-    write('That is not a valid player name. Please try again.'), nl,
-    listPlayers,
-    getPlayer(N).
-
-nextPlayer(N,M) :-
-    validNum(N),
-    numPlayers(X),
-    N < X,
-    M =:= N + 1.
-nextPlayer(N,M) :-
-    numPlayers(X),
-    ==(N,X),
-    ==(M,1).
+assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
+assertNextPlayer(First, Previous, Current) :-
+    assert(next(Previous, Current)),
+    assert(player(Current)),
+    write('Enter next player (or "done." if no more): '),
+    read(Next), assertNextPlayer(First, Current, Next).
 
 getMyName :- read(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
-inputMyName(_) :- write('That\'s not a valid player name. Please try again.'), nl, %TODO write the player names
-    getMyName.
+inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 
 %%%%%%%%%%%%%%%%%%%%%%%% HELP COMMAND %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 help :-
     write('You may enter any of the following commands:'), nl,nl,
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,
     write('"setup." - This command only needs to be run once. It will let you initialize the game with the rooms, weapons, and characters, and players in your game.'), nl,nl,
-    write('"listPlayers." - Lists all the players in the game'), nl,nl. %etc. add commands as they are created.
+    write('"listPlayers." - Lists all the players in the game'), nl,nl,
+    write('"listCards." - Lists all the cards in the game'), nl,nl.
+    
+%etc. add commands as they are created.
 
+showDatabase :- true.
 
-showDatabase :- true. %TODO
-
+listCards :- listRooms, listWeapons, listCharacters.
+listRooms :- findall(R, room(R), Rooms), write('The rooms are: '), writeln(Rooms),nl.
+listWeapons :- findall(W, weapon(W), Weapons), write('The weapons are: '), writeln(Weapons),nl.
+listCharacters :- findall(C, character(C), Characters), write('The characters are: '), writeln(Characters),nl.
 listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
-
-
-
 
 ps :- listing(player(X)).
 
 readline(X) :- read(X).
-
-addPlayers :-
-    write('Enter first player:'), readline(First),
-    write('Enter next player:'), readline(Next),
-    assertNextPlayer(First, First, Next).
-
-assertNextPlayer(First, Last, []) :- assert(next(Last, First)).
-assertNextPlayer(First, Previous, Current) :-
-    assert(next(Previous, Current)),
-    write('Enter next player (or just hit enter if no more):'),
-    readline(Next), assertNextPlayer(First, Current, Next).
-
-%% addPlayer(Previous) :-
-%%     write('Enter the next player:'),
-%%     readln(Next), assert(next(Previous, Next)), addPlayer(Next).
-
-
 
 
 % Test facts.

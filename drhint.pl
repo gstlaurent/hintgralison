@@ -134,7 +134,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 gameLoop :-
-  makesuggestion, accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
+  suggestionPrompt, accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
 
 accusescript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),

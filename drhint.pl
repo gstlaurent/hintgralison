@@ -1,3 +1,5 @@
+%% :- expects_dialect(sicstus).
+
 :- dynamic has/2, lacks/2, maybe/2.
 
 :- dynamic room/1,
@@ -8,7 +10,8 @@
    playerNum/2,
    me/1,
    dead/1,
-   location/2.
+   location/2,
+   next/2.
 
 /*
 Examples of all the types of facts
@@ -137,7 +140,7 @@ help :-
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,
     write('"setup." - This command only needs to be run once. It will let you initialize the game with the rooms, weapons, and characters, and players in your game.'), nl,nl,
     write('"listPlayers." - Lists all the players in the game'), nl,nl. %etc. add commands as they are created.
-    
+
 
 showDatabase :- true. %TODO
 
@@ -145,6 +148,27 @@ listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players)
 
 
 
+
+ps :- listing(player(X)).
+
+
+addPlayers :-
+    write('Enter first player:'), readln(First),
+    write('Enter next player:'), readln(Next),
+    assertNextPlayer(First, First, Next).
+
+assertNextPlayer(First, Last, []) :- assert(next(Last, First)).
+assertNextPlayer(First, Previous, Current) :-
+    assert(next(Previous, Current)),
+    write('Enter next player (or just hit enter if no more):'),
+    readln(Next), assertNextPlayer(First, Current, Next).
+
+%% addPlayer(Previous) :-
+%%     write('Enter the next player:'),
+%%     readln(Next), assert(next(Previous, Next)), addPlayer(Next).
+
+
+readline(X) :- readln(X:Xs),  .
 
 
 % Test facts.
@@ -174,10 +198,10 @@ room(hall).
 room(lounge).
 
 % our test game has only four players
-player(scarlett).
-player(plum).
-player(white).
-player(mustard).
+%% player(scarlett).
+%% player(plum).
+%% player(white).
+%% player(mustard).
 
 dead(mustard).
 
@@ -256,10 +280,11 @@ accusation(Character, Weapon, Room) :-
    weapon(Weapon), allLack(Weapon),
    room(Room), allLack(Room).
 
-%% True when there are no players holding the given card
+%% True when there are no players holding the given cardd
 allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
 
 
 %% Listing might be handing for testing.
 %% listing(lacks(X,Y)).
+

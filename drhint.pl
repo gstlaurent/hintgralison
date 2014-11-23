@@ -116,7 +116,7 @@ inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMy
 
 showDatabase :- listAllCards, listPlayers, listAllPlayerCards.
 
-listAllCards :- listCards(room), listCards(weapon), listCards(character).
+listAllCards :- listCards(character), listCards(weapon), listCards(room).
 
 listCards(Type) :- findall(C, call(Type, C), Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
 
@@ -259,13 +259,20 @@ listings :- listing(lacks(_, _)), listing(has(_, _)).
 suggestionPrompt :-
     write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
     readline(X),
-    makesuggestion(X).
+    getSuggestion(X).
 
-makesuggestion(db) :- showDatabase, suggestionPrompt.
-makesuggestion('') :-
+getSuggestion(db) :- showDatabase, suggestionPrompt.
+getSuggestion('') :-
     write('Enter your CHARACTER suggestion: '), readline(Character),
     write('Enter your WEAPON suggestion: '), readline(Weapon),
     write('Enter your ROOM suggestion: '), readline(Room),
+    validateSuggestion(Character,Weapon,Room).
+
+validateSuggestion(Character, Weapon, Room) :-
+    character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Character,Weapon,Room).
+validateSuggestion(_,_,_) :- write('That is not a valid suggestion'), listAllCards, suggestionPrompt.
+
+makeSuggestion(Character,Weapon,Room) :-    
     write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
     readline(Player),
     write('Name the CARD that you were shown (or just hit ENTER if no one could show you anithing): '),

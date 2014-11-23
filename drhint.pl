@@ -1,4 +1,4 @@
-%% :- expects_dialect(sicstus).
+:- expects_dialect(sicstus).
 
 :- dynamic has/2, lacks/2, maybe/2.
 
@@ -12,6 +12,15 @@
    next/2,
    firstPlayer/1.
   
+
+
+%TODO:
+% switch from read to readline
+
+%% IF LOTS LOF EXTRA TIME:
+%% auto generate number of cards per player
+
+
 
 /*
 Examples of all the types of facts
@@ -112,7 +121,6 @@ inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMy
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 help :-
     write('You may enter any of the following commands:'), nl,nl,
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,
@@ -143,7 +151,10 @@ allLacking(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 ps :- listing(player(X)).
 
-readline(X) :- read(X).
+readline(String) :- read_line(Input), string_codes(String, Input).
+%% writeline(String) :- writef("%s", [String]).
+writeline(String) :- write(String).
+
 
 
 % Test facts.
@@ -258,3 +269,44 @@ allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Pla
 
 %% listings/0 is handy for testing.
 listings :- listing(lacks(_, _)), listing(has(_, _)).
+
+
+
+%% Starting the fun game!
+
+makesuggestion :-
+    write('When it is your turn to make a suggestion, hit enter.'),
+    readline(Ignore),
+    promptTilValid('Enter your CHARACTER suggestion: ', character, Character).
+
+    %% write('Enter your CHARACTER suggestion: '), readline(Character),
+    %% write('Enter your WEAPON suggestion: '), readline(Weapon),
+    %% write('Enter your ROOM suggestion: '), readline(Room),
+
+listCards(CardType) :-
+    findall(Card, call(CardType, Card), Cards),
+    write('The '), write(CardType), write('s are: '), writeln(Cards), nl.
+
+
+
+promptTilValid(Prompt, Goal, Input) :-
+    write(Prompt),
+    readline(Input),
+    verified(Prompt, Goal, Input).
+
+verified(Prompt, Goal, Input) :-
+    
+
+    inputIsGoal(Goal, Input),
+
+
+    call(Goal, Input), !.
+
+promptTilValid(Prompt, Goal, Input) :-
+    write(Prompt),
+    readline(Input), !,
+    not(call(Goal, Input)),
+    write('Sorry but that is not a valid '), write(Goal),
+    listCards(Goal), !,  promptTilValid(Prompt, Goal, Input).
+
+

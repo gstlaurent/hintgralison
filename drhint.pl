@@ -194,18 +194,18 @@ next('mustard', 'scarlett').
 %% maybe(Player, Card) :- fail.
 
 %% sample solution:
-lacks('white', 'green').
-lacks('white', 'study').
-lacks('white', 'knife').
-lacks('mustard', 'green').
-lacks('mustard', 'study').
-lacks('mustard', 'knife').
-lacks('scarlett', 'green').
-lacks('scarlett', 'study').
-lacks('scarlett', 'knife').
-lacks('plum', 'green').
-lacks('plum', 'study').
-lacks('plum', 'knife').
+%% lacks('white', 'green').
+%% lacks('white', 'study').
+%% lacks('white', 'knife').
+%% lacks('mustard', 'green').
+%% lacks('mustard', 'study').
+%% lacks('mustard', 'knife').
+%% lacks('scarlett', 'green').
+%% lacks('scarlett', 'study').
+%% lacks('scarlett', 'knife').
+%% lacks('plum', 'green').
+%% lacks('plum', 'study').
+%% lacks('plum', 'knife').
 
 
 card(X) :- character(X).

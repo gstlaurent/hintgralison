@@ -61,7 +61,7 @@ setup :-
     retractall(numCards(_)),
     getPlayers, nl,
 
-    write('Which player are you?'), nl,
+    write('Which player are you? '),
     retractall(me(_)),
     getMyName,
 
@@ -94,21 +94,19 @@ getPlayers :-
     write('Enter first player: '), readline(First),
     write('How many cards does this player have? '), readline(N1),
     write('Enter next player: '), readline(Next),
-    write('How many cards does this player have? '), readline(N2),
     assert(player(First)),
     assert(numCards(First,N1)),
     assert(firstPlayer(First)),
     assert(next(First, Next)),
-    assert(numCards(Next, N2)),
     assertNextPlayer(First, First, Next).
 
 assertNextPlayer(First, Last, done) :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
+    write('How many cards does this player have? '), readline(N),
+    assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter next player (or "done." if no more): '),
-    write('How many cards does this player have? '), readline(N),
-    assert(numCards(current, N)),
     read(Next), assertNextPlayer(First, Current, Next).
 
 getMyName :- read(Character), inputMyName(Character).
@@ -125,13 +123,23 @@ help :-
     
 %etc. add commands as they are created.
 
-showDatabase :- true.
+showDatabase :- listCards, listPlayers, listHasCards, listLacksCards.
 
 listCards :- listRooms, listWeapons, listCharacters.
 listRooms :- findall(R, room(R), Rooms), write('The rooms are: '), writeln(Rooms),nl.
 listWeapons :- findall(W, weapon(W), Weapons), write('The weapons are: '), writeln(Weapons),nl.
 listCharacters :- findall(C, character(C), Characters), write('The characters are: '), writeln(Characters),nl.
 listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
+listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
+
+listPlayerCards(Player) :- allHas(Player, HasCards), write(Player), write(' has these cards: '),
+                           writeln(HasCards),
+                           allLacking(Player, LacksCards), write(Player),
+                           write(' does not have any of these cards: '), writeln(LacksCards), nl.
+
+allHas(Player, Cards) :- findall(C, has(Player, C), Cards).
+allLacking(Player, Cards) :- findall(C, lacks(Player, C), Cards).
+
 
 ps :- listing(player(X)).
 

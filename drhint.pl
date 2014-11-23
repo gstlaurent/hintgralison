@@ -40,6 +40,15 @@ clue :-
     write('Whenever you wish to see the database, type "db"'), nl,
     gameLoop.
 
+%%%%%%%%%%%%%%%%%%%%%%%% INTRO TEXT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO write better intro to the game. explain the commands you can type. Tell them to type "setup." to initialize the game.
+intro :-
+    write('Welcome to Dr. Clue!'),
+    help,
+    write('If you need help, type "help." This will let you know what commands are available.'), nl,
+    write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl,
+    setup.
+
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO better wording of instructions.
@@ -150,29 +159,29 @@ writeline(String) :- write(String).
 
 % Test facts.
 
-character(scarlett).
-character(plum).
-character(peacock).
-character(green).
-character(mustard).
-character(white).
+character("scarlett").
+character("plum").
+character("peacock").
+character("green").
+character("mustard").
+character("white").
 
-weapon(candlestick).
-weapon(knife).
-weapon(leadpipe).
-weapon(revolver).
-weapon(rope).
-weapon(wrench).
+weapon("candlestick").
+weapon("knife").
+weapon("leadpipe").
+weapon("revolver").
+weapon("rope").
+weapon("wrench").
 
-room(kitchen).
-room(ballroom).
-room(conservatory).
-room(dining).
-room(billiard).
-room(library).
-room(study).
-room(hall).
-room(lounge).
+room("kitchen").
+room("ballroom").
+room("conservatory").
+room("dining").
+room("billiard").
+room("library").
+room("study").
+room("hall").
+room("lounge").
 
 % our test game has only four players
 %% player(scarlett).
@@ -180,39 +189,36 @@ room(lounge).
 %% player(white).
 %% player(mustard).
 
-dead(mustard).
+dead("mustard").
 
-me(plum).
+me("plum").
 
 %% has(plum, )
 
 
-
-
 % next(CurrentPlayer, NextPlayer).
-next(scarlett, plum).
-next(plum, white).
-next(white, mustard).
-next(mustard, scarlett).
+next("scarlett", "plum").
+next("plum", "white").
+next("white", "mustard").
+next("mustard", "scarlett").
 
 %% has(Player, Card) :- fail.
 %% lacks(Player, Card) :- fail.
 %% maybe(Player, Card) :- fail.
 
 %% sample solution:
-lacks(white, green).
-lacks(white, study).
-lacks(white, knife).
-lacks(mustard, green).
-lacks(mustard, study).
-lacks(mustard, knife).
-lacks(scarlett, green).
-lacks(scarlett, study).
-lacks(scarlett, knife).
-lacks(plum, green).
-lacks(plum, study).
-lacks(plum, knife).
-
+lacks("white", "green").
+lacks("white", "study").
+lacks("white", "knife").
+lacks("mustard", "green").
+lacks("mustard", "study").
+lacks("mustard", "knife").
+lacks("scarlett", "green").
+lacks("scarlett", "study").
+lacks("scarlett", "knife").
+lacks("plum", "green").
+lacks("plum", "study").
+lacks("plum", "knife").
 
 
 card(X) :- character(X).
@@ -220,7 +226,7 @@ card(X) :- weapon(X).
 card(X) :- room(X).
 
 assertLacksTrio(Player, Character, Weapon, Room) :-
-   assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
+    assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
 
 
 %% assertLacks and assertHas creates proper assertions if necessary.
@@ -261,4 +267,38 @@ allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Pla
 %% listings/0 is handy for testing.
 listings :- listing(lacks(_, _)), listing(has(_, _)).
 
+
+%% Starting the fun game!
+
+
+makesuggestion :-
+    write('When it is your turn to make a suggestion, hit enter.'),
+    readline(Ignore),
+    write('Enter your CHARACTER suggestion: '), readline(Character),
+    write('Enter your WEAPON suggestion: '), readline(Weapon),
+    write('Enter your ROOM suggestion: '), readline(Room),
+    write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
+    readline(Player),
+    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anithing): '),
+    readline(Card),
+    normalizePlayer(Player, PlayerOrNone),
+    me(Me), next(Me, PlayerToLeft),
+    mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
+
+
+
+
+%% promptTilValidRead(Goal, Input) :-
+%%     write('Enter your '), write(Goal), write(' suggestion: ')
+%%     readline(Input),
+%%     (call(Goal, Input) -> ! ; promptTilValid(Goal, NewInput))
+%%     verified(Prompt, Goal, Input).
+
+%% verified(Prompt, Goal, Input) :-
+%%     call(Goal, Input), !.
+
+%% verified(Prompt, Goal, Input) :-
+%%     write('Sorry but that is not a valid '), write(Goal),
+%%     listCards(Goal),
+%%     promptTilValid(Prompt, Goal, Input).
 

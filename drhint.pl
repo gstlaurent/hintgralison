@@ -45,7 +45,7 @@ intro :-
     help,
     write('If you need help, type "help." This will let you know what commands are available.'), nl,
     write('To begin the game, type "setup." This will lead you through the initialization of the game.'), nl,
-    setup,
+    setup.
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -279,39 +279,36 @@ listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 %% Starting the fun game!
 
+
 makesuggestion :-
     write('When it is your turn to make a suggestion, hit enter.'),
     readline(Ignore),
-    promptTilValid('Enter your CHARACTER suggestion: ', character, Character).
-
-    %% write('Enter your CHARACTER suggestion: '), readline(Character),
-    %% write('Enter your WEAPON suggestion: '), readline(Weapon),
-    %% write('Enter your ROOM suggestion: '), readline(Room),
-
-listCards(CardType) :-
-    findall(Card, call(CardType, Card), Cards),
-    write('The '), write(CardType), write('s are: '), writeln(Cards), nl.
-
-
-
-promptTilValid(Prompt, Goal, Input) :-
-    write(Prompt),
-    readline(Input),
-    verified(Prompt, Goal, Input).
-
-verified(Prompt, Goal, Input) :-
-    
-
-    inputIsGoal(Goal, Input),
+    write('Enter your CHARACTER suggestion: '), readline(Character),
+    write('Enter your WEAPON suggestion: '), readline(Weapon),
+    write('Enter your ROOM suggestion: '), readline(Room),
+    write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
+    readline(Player),
+    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anithing): '),
+    readline(Card),
+    normalizePlayer(Player, PlayerOrNone),
+    me(Me), next(Me, PlayerToLeft),
+    mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
 
 
-    call(Goal, Input), !.
 
-promptTilValid(Prompt, Goal, Input) :-
-    write(Prompt),
-    readline(Input), !,
-    not(call(Goal, Input)),
-    write('Sorry but that is not a valid '), write(Goal),
-    listCards(Goal), !,  promptTilValid(Prompt, Goal, Input).
+
+%% promptTilValidRead(Goal, Input) :-
+%%     write('Enter your '), write(Goal), write(' suggestion: ')
+%%     readline(Input),
+%%     (call(Goal, Input) -> ! ; promptTilValid(Goal, NewInput))
+%%     verified(Prompt, Goal, Input).
+
+%% verified(Prompt, Goal, Input) :-
+%%     call(Goal, Input), !.
+
+%% verified(Prompt, Goal, Input) :-
+%%     write('Sorry but that is not a valid '), write(Goal),
+%%     listCards(Goal),
+%%     promptTilValid(Prompt, Goal, Input).
 
 

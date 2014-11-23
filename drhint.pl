@@ -16,26 +16,13 @@
 %% auto generate number of cards per player
 %% Make generic change so ENTER can finish things.
 
-/*
-Examples of all the types of facts
-
-weapon(knife).
-room(library).
-character(scarlett).
-player(scarlett).
-firstPlayer(plum).
-next(scarlett,plum).
-me(alison).
-
-*/
-
 % TODO write better intro to the game. 
 clue :-
     write('Welcome to Dr. Clue!'), nl,
     write('To begin, we will lead you through the initialization of the game.'), nl,
-    setup,
+    setup,!,
     write('Setup is complete. It\'s time to begin the game!'), nl,
-    gameLoop.
+    suggestionPrompt.
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -133,8 +120,72 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gameLoop :-
-  suggestionPrompt, accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
+suggestionPrompt :-
+    write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
+    readline(X),
+    getSuggestion(X),
+    suggestionPrompt.
+
+getSuggestion(db) :- showDatabase, suggestionPrompt.
+% If an accusation can be made, let the player know instead of asking them for their suggestion.
+getSuggestion(_) :- accusation(Character, Weapon, Room), accusescript(Character, Weapon, Room).
+getSuggestion('') :-
+    write('Enter your CHARACTER suggestion: '), readline(Character),
+    write('Enter your WEAPON suggestion: '), readline(Weapon),
+    write('Enter your ROOM suggestion: '), readline(Room),
+    validateSuggestion(Character,Weapon,Room).
+
+validateSuggestion(Character, Weapon, Room) :-
+    character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Character,Weapon,Room).
+validateSuggestion(_,_,_) :- write('That is not a valid suggestion'), listAllCards, suggestionPrompt.
+
+makeSuggestion(Character,Weapon,Room) :-    
+    write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
+    readline(Player),
+    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anything): '),
+    readline(Card),
+    normalizePlayer(Player, PlayerOrNone),
+    me(Me), next(Me, PlayerToLeft),
+    mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
+
+normalizePlayer(PotentialPlayer, PlayerOrNone) :-
+    not(player(PotentialPlayer)), PlayerOrNone = none.
+normalizePlayer(PotentialPlayer, PlayerOrNone) :- PlayerOrNone = PotentialPlayer.
+
+assertLacksTrio(Player, Character, Weapon, Room) :-
+    assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
+
+%% assertLacks and assertHas creates proper assertions if necessary.
+assertLacks(Player, Card) :- lacks(Player, Card), !.
+assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
+
+%% True when there are no players holding the given cardd
+allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
+
+%% Ensures other players lack the card, if neccessary.
+assertHas(Player, Card) :- has(Player, Card), !.
+assertHas(Player, Card) :- assert(has(Player, Card)), allPlayers(Players),
+   delete(Players, Player, Others), forall(member(P, Others), assertLacks(P, Card)).
+
+allPlayers(Players) :- findall(P, player(P), Players).
+
+
+%% Adds to DB knowledge gained from this round of my suggestion.
+% TODO: make generic 'suggestion' that can assert maybes. Have shorter version, mysuggestion based on generic
+%%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
+mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
+mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- assertHas(DisprovingPlayer, DisprovingCard), !.
+mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
+   assertLacksTrio(InspectingPlayer, Character, Weapon, Room),
+   next(InspectingPlayer, NextPlayer), !,
+   mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
+
+
+%% Produce True when the given variables are indisputedly in the Clue envelope.
+accusation(Character, Weapon, Room) :-
+   character(Character), allLack(Character),
+   weapon(Weapon), allLack(Weapon),
+   room(Room), allLack(Room).
 
 accusescript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
@@ -146,16 +197,17 @@ accusescript(Character, Weapon, Room) :-
   nl, writeln('*******************************************************************************************').
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%% ??? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%% HELPER FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 %% writeline(String) :- writef("%s", [String]).
 writeline(String) :- write(String).
 
+%% listings/0 is handy for testing.
+listings :- listing(lacks(_, _)), listing(has(_, _)).
 
 
-% Test facts.
+%%%%%%%%% Test facts %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 character('scarlett').
 character('plum').
@@ -215,100 +267,3 @@ next('mustard', 'scarlett').
 %% lacks('plum', 'green').
 %% lacks('plum', 'study').
 %% lacks('plum', 'knife').
-
-
-card(X) :- character(X).
-card(X) :- weapon(X).
-card(X) :- room(X).
-
-assertLacksTrio(Player, Character, Weapon, Room) :-
-    assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
-
-
-%% assertLacks and assertHas creates proper assertions if necessary.
-assertLacks(Player, Card) :- lacks(Player, Card), !.
-assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
-
-%% Ensures other players lack the card, if neccessary.
-assertHas(Player, Card) :- has(Player, Card), !.
-assertHas(Player, Card) :- assert(has(Player, Card)), allPlayers(Players),
-   delete(Players, Player, Others), forall(member(P, Others), assertLacks(P, Card)).
-
-
-allPlayers(Players) :- findall(P, player(P), Players).
-
-
-%% Adds to DB knowledge gained from this round of my suggestion.
-% TODO: make generic 'suggestion' that can assert maybes. Have shorter version, mysuggestion based on generic
-%%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
-mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
-mysuggestion(DisprovingPlayer, _, _, _, DisprovingPlayer, DisprovingCard) :- assertHas(DisprovingPlayer, DisprovingCard), !.
-mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
-   assertLacksTrio(InspectingPlayer, Character, Weapon, Room),
-   next(InspectingPlayer, NextPlayer), !,
-   mysuggestion(NextPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard).
-
-
-%% Produce True when the given variables are indisputedly in the Clue envelope.
-accusation(Character, Weapon, Room) :-
-   character(Character), allLack(Character),
-   weapon(Weapon), allLack(Weapon),
-   room(Room), allLack(Room).
-
-%% True when there are no players holding the given cardd
-allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
-
-
-
-%% listings/0 is handy for testing.
-listings :- listing(lacks(_, _)), listing(has(_, _)).
-
-
-%% Starting the fun game!
-
-suggestionPrompt :-
-    write('When it is your turn to make a suggestion, hit enter. Or, type "db" to see the database. '),
-    readline(X),
-    getSuggestion(X).
-
-getSuggestion(db) :- showDatabase, suggestionPrompt.
-getSuggestion('') :-
-    write('Enter your CHARACTER suggestion: '), readline(Character),
-    write('Enter your WEAPON suggestion: '), readline(Weapon),
-    write('Enter your ROOM suggestion: '), readline(Room),
-    validateSuggestion(Character,Weapon,Room).
-
-validateSuggestion(Character, Weapon, Room) :-
-    character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Character,Weapon,Room).
-validateSuggestion(_,_,_) :- write('That is not a valid suggestion'), listAllCards, suggestionPrompt.
-
-makeSuggestion(Character,Weapon,Room) :-    
-    write('Name the PLAYER who showed you a card (or just hit ENTER if no one could show you anything): '),
-    readline(Player),
-    write('Name the CARD that you were shown (or just hit ENTER if no one could show you anything): '),
-    readline(Card),
-    normalizePlayer(Player, PlayerOrNone),
-    me(Me), next(Me, PlayerToLeft),
-    mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
-
-normalizePlayer(PotentialPlayer, PlayerOrNone) :-
-    not(player(PotentialPlayer)), PlayerOrNone = none.
-normalizePlayer(PotentialPlayer, PlayerOrNone) :- PlayerOrNone = PotentialPlayer.
-
-
-
-
-%% promptTilValidRead(Goal, Input) :-
-%%     write('Enter your '), write(Goal), write(' suggestion: ')
-%%     readline(Input),
-%%     (call(Goal, Input) -> ! ; promptTilValid(Goal, NewInput))
-%%     verified(Prompt, Goal, Input).
-
-%% verified(Prompt, Goal, Input) :-
-%%     call(Goal, Input), !.
-
-%% verified(Prompt, Goal, Input) :-
-%%     write('Sorry but that is not a valid '), write(Goal),
-%%     listCards(Goal),
-%%     promptTilValid(Prompt, Goal, Input).
-

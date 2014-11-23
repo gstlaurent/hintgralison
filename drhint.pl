@@ -119,17 +119,18 @@ help :-
     write('"showDatabase." - List all the information that is currently known.'), nl,nl,
     write('"setup." - This command only needs to be run once. It will let you initialize the game with the rooms, weapons, and characters, and players in your game.'), nl,nl,
     write('"listPlayers." - Lists all the players in the game'), nl,nl,
-    write('"listCards." - Lists all the cards in the game'), nl,nl.
+    write('"listAllCards." - Lists all the cards in the game'), nl,nl.
     
 %etc. add commands as they are created.
 
-showDatabase :- listCards, listPlayers, listHasCards, listLacksCards.
+showDatabase :- listAllCards, listPlayers, listHasCards, listAllPlayerCards.
 
-listCards :- listRooms, listWeapons, listCharacters.
-listRooms :- findall(R, room(R), Rooms), write('The rooms are: '), writeln(Rooms),nl.
-listWeapons :- findall(W, weapon(W), Weapons), write('The weapons are: '), writeln(Weapons),nl.
-listCharacters :- findall(C, character(C), Characters), write('The characters are: '), writeln(Characters),nl.
+listAllCards :- listCards(room), listCards(weapon), listCards(character).
+
+listCards(Type) :- findall(C, call(Type, C), Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
+
 listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
+
 listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
 
 listPlayerCards(Player) :- allHas(Player, HasCards), write(Player), write(' has these cards: '),

@@ -81,18 +81,18 @@ input(card,_) :- write('That\'s not a valid card. '), nl, listAllCards, getInfo(
 
 getPlayers :-
     write('Enter first player: '), readline(First),
-    write('How many cards does this player have? '), readline(N1),
+    write('How many cards does this player have? '), readline(NumCards),
     write('Enter next player: '), readline(Next),
     assert(player(First)),
-    assert(numCards(First,N1)),
+    assert(numCards(First,NumCards)),
     assert(firstPlayer(First)),
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
 
 assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
-    write('How many cards does this player have? '), readline(N),
-    assert(numCards(Previous, N)),
+    write('How many cards does this player have? '), readline(NumCards),
+    assert(numCards(Previous, NumCards)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter next player or hit ENTER if there are no more players: '),
@@ -105,13 +105,15 @@ inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMy
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-showDatabase :- listAllCards, listPlayers, listAllPlayerCards,listAllPotentials.
+showDatabase :- listAllCards, listPlayers, listMe, nl, listAllPlayerCards,listAllPotentials.
 
 listAllCards :- listCards(character), listCards(weapon), listCards(room).
 
 listCards(Type) :- allType(Type, Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
 
 listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
+
+listMe :- me(Player), write('You are '), write(Player), nl.
 
 listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
 
@@ -125,7 +127,7 @@ listAllPotentials :-
     allType(potential,Cards),
     write('Cards that may be in the envelope: '), writeln(Cards). 
 
-    %% Items is all things of type Type
+%% Items is all things of type Type
 allType(Type, Items) :- findall(I, call(Type, I), Items).
     
 hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
@@ -136,36 +138,36 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 gameLoop(Player) :-
     me(Player), !,
-    write('It\'s your turn! To make a suggestion, type "suggest".'), nl,
+    write('It\'s your turn!'), nl,
+    %% Player can make an accusation any time it is their turn.
+    checkForAccusation,
+    write('To make a suggestion, type "suggest".'), nl,
     write('To move to the next player without making a suggestion, hit enter.'), nl,
     write('To see the database, type "db". '),
-    readline(X),
+    readline(X), nl,
     suggestionPrompt(Player,X).
 gameLoop(Player) :-
     write('It\'s '), write(Player), write('\'s turn.'),nl,
     write('Type "suggest" if the player made a suggestion or accusation.'), nl,
     write('Type "db" to see the database.'), nl,
     write('Hit enter to move to the next player. '),
-    readline(X),
+    readline(X), 
     suggestionPrompt(Player,X).
 
-% If an accusation can be made, let the player know
+
 suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
+% If an accusation can be made after the suggestion, let the player know
 suggestionPrompt(Player, suggest) :-
     me(Player),
-    nl,
-    checkForAccusation,
+    % TODO suggestCards for the player - check what room the player is in.
     getSuggestion(Player),
     checkForAccusation,
     next(Player, Next),
     gameLoop(Next).
 suggestionPrompt(Player, suggest) :-
-    nl,
     getSuggestion(Player),
     next(Player, Next),
     gameLoop(Next).
-%% Player can make accusation even if they are not able to make a suggestion.
-suggestionPrompt(Player,'') :- me(Player), checkForAccusation, nl, next(Player, Next), gameLoop(Next).
 suggestionPrompt(Player,'') :- nl, next(Player, Next), gameLoop(Next).
 suggestionPrompt(Player,_) :-
     write('Invalid input. Try again'), nl, gameLoop(Player).
@@ -188,9 +190,7 @@ makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
     write('Name the CARD that was shown (or just hit ENTER if you didn\'t see it or no card was shown: '),
     readline(Card),
     validateAndRecordSuggestion(CurrentPlayer,Character,Weapon,Room,DisprovingPlayer,Card).
-%    normalizePlayer(Player, PlayerOrNone),
-%    next(Me, PlayerToLeft),
-%    mysuggestion(PlayerToLeft, Character, Weapon, Room, PlayerOrNone, Card).
+
 
 %% No one showed a card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,'','') :- !,
@@ -211,12 +211,9 @@ validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
     makeSuggestion(Current,Character,Weapon,Room).
 
 
-
 %% Adds to DB knowledge gained from this round of my suggestion.
 % TODO: make generic 'suggestion' that can assert maybes. Have shorter version, mysuggestion based on generic
 %%  mysuggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
-%mysuggestion(InspectingPlayer,_,_,_,none,_) :- me(InspectingPlayer), !.
-
 %% No one showed a card. Inspecting Player could be bluffing and have some of the cards, but no other
 %% players can have any of them.
 mysuggestion(InspectingPlayer, Character, Weapon, Room, '', '') :-
@@ -226,10 +223,7 @@ mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :-
     playersBetween(InspectingPlayer,DisprovingPlayer,Between),
     forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)), !.
 %TODO. record that one of these cards is in DisprovingPlayer's hands.
-        
-mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
-    playersBetween(InspectingPlayer,DisprovingPlayer,Between),
-    forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)),
+mysuggestion(_, _, _, _, DisprovingPlayer, DisprovingCard) :-
     assertHas(DisprovingPlayer, DisprovingCard), !. 
 
 %% Checks if an accusation is possible and informs the player if this is the case
@@ -269,8 +263,7 @@ assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
 %% True when there are no players holding the given cardd
 allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
-%% Ensures other players lack the card, if neccessary, and removes card from
-%% potentials.
+%% Ensures other players lack the card, if neccessary, and removes card from potentials.
 assertHas(Player, Card) :- has(Player, Card), !.
 assertHas(Player, Card) :-
     assert(has(Player, Card)),

@@ -19,7 +19,32 @@
 %% auto generate number of cards per player
 %% Make generic change so ENTER can finish things.
 
-% TODO write better intro to the game. 
+% TODO write better intro to the game.
+/*
+fix so it doesn't ask you for a room when making a suggestion
+
+
+
+validate that card number is a number
+optionally: have it infer the number of cards
+
+bug: stopped giving suggestion suggestion
+
+bug: doesn't assert that players lack cards when they don't show any
+Graham: fix playersBetween and mysuggestion (rename)
+
+
+write function that checks how many cards player lacks and fills in ones they therefore must have??
+
+
+benefits: not like prolog. can enter spaces, punctuation in their entries (for example, "Mrs. White")
+
+catches typos, but not cheating. If you say another player showed you a card they could not have shown, will not catch this.
+
+*/
+
+
+    
 clue :-
     write('Welcome to Dr. Clue!'), nl,
     write('To begin, we will lead you through the initialization of the game.'), nl,
@@ -149,12 +174,11 @@ gameLoop(Player) :-
     suggestionPrompt(Player,X).
 gameLoop(Player) :-
     write('It\'s '), write(Player), write('\'s turn.'),nl,
-    write('Type "suggest" if the player made a suggestion or accusation.'), nl,
+    write('Type "suggest" if "), write(Player), write(" made a suggestion or accusation.'), nl,
     write('Type "db" to see the database.'), nl,
     write('Hit enter to move to the next player. '),
     readline(X), 
     suggestionPrompt(Player,X).
-
 
 suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
 % If an accusation can be made after the suggestion, let the player know
@@ -183,7 +207,7 @@ getSuggestion(Player) :-
 %% Ensures a valid suggestion was made before moving on.
 validateSuggestion(Player,Character, Weapon, Room) :-
     character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Player,Character,Weapon,Room).
-validateSuggestion(Player,_,_,_) :- write('That is not a valid suggestion'), listAllCards, getSuggestion(Player).
+validateSuggestion(Player,_,_,_) :- write('That is not a valid suggestion'), nl, listAllCards, getSuggestion(Player).
 
 makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
     %me(CurrentPlayer),
@@ -196,7 +220,7 @@ makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
 
 %% No one showed a card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,'','') :- !,
-    mysuggestion(Current,Character,Weapon,Room,none,none), !,
+    mysuggestion(Current,Character,Weapon,Room,'',''), !,
     next(Current,Next), gameLoop(Next).
 %% Valid values of DisprovingPlayer and Card were given.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,DisprovingPlayer,Card) :-
@@ -207,7 +231,7 @@ validateAndRecordSuggestion(Current,Character,Weapon,Room,DisprovingPlayer,Card)
 %% Invalid value given for either DisprovingPlayer or Card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
     write('Invalid player or card entered. Please try again.'),nl,
-    listAllPlayers,
+    listPlayers,
     write('The possible cards shown are: '), write(Character), write(', '),
     write(Weapon), write(', '), write(Room), nl,
     makeSuggestion(Current,Character,Weapon,Room).
@@ -221,7 +245,7 @@ validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
 mysuggestion(InspectingPlayer, Character, Weapon, Room, '', '') :-
     allPlayers(Players), delete(Players, InspectingPlayer, Others),
     forall(member(P, Others), assertLacksTrio(P, Character,Weapon,Room)), !.
-mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :-
+mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :- !,
     playersBetween(InspectingPlayer,DisprovingPlayer,Between),
     forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)), !.
 %TODO. record that one of these cards is in DisprovingPlayer's hands.

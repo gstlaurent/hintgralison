@@ -11,7 +11,8 @@
    location/2,
    next/2,
    firstPlayer/1,
-   potential/1.
+   potential/1,
+   numCards/2.
 
 
 %% IF LOTS LOF EXTRA TIME:
@@ -50,7 +51,7 @@ setup :-
     retractall(next(_,_)),
     retractall(player(_)),
     retractall(firstPlayer(_)),
-    retractall(numCards(_)),
+    retractall(numCards(_,_)),
     getPlayers, nl,
 
     write('Which player are you? '),
@@ -84,7 +85,7 @@ getPlayers :-
     write('How many cards does this player have? '), readline(NumCards),
     write('Enter next player: '), readline(Next),
     assert(player(First)),
-    assert(numCards(First,NumCards)),
+    atom_number(NumCards, N), assert(numCards(First,N)), 
     assert(firstPlayer(First)),
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
@@ -92,7 +93,7 @@ getPlayers :-
 assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     write('How many cards does this player have? '), readline(NumCards),
-    assert(numCards(Previous, NumCards)),
+    atom_number(NumCards, N), assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter next player or hit ENTER if there are no more players: '),
@@ -139,7 +140,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,
-    %% Player can make an accusation any time it is their turn.
+    %% Player can make an accusation if it is their turn, even if not in a room.
     checkForAccusation,
     write('To make a suggestion, type "suggest".'), nl,
     write('To move to the next player without making a suggestion, hit enter.'), nl,
@@ -160,6 +161,7 @@ suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
 suggestionPrompt(Player, suggest) :-
     me(Player),
     % TODO suggestCards for the player - check what room the player is in.
+    offerSuggestion, !,
     getSuggestion(Player),
     checkForAccusation,
     next(Player, Next),
@@ -226,6 +228,32 @@ mysuggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :-
 mysuggestion(_, _, _, _, DisprovingPlayer, DisprovingCard) :-
     assertHas(DisprovingPlayer, DisprovingCard), !. 
 
+
+offerSuggestion :-
+    write('What room are you in? '),
+    readline(Room),
+    verifyAndSuggest(Room).
+
+verifyAndSuggest(Room) :-
+    room(Room), !, writeSuggestion(Room).
+verifyAndSuggest(_) :-
+    write('That is not a valid room.'),
+    listCards(room),
+    % Get the player to enter the room again.
+    offerSuggestion. 
+
+writeSuggestion(Room) :-
+    findSuggestion(Character, Weapon, Room),
+    write('You should suggest that '), write(Character),
+    write(' murdered somebody in the '), write(Room),
+    write(' with the '), write(Weapon), nl.
+
+%% Very simple suggester. Does not bluff or strategize. TODO Improve this!
+findSuggestion(Character, Weapon, Room) :-
+    character(Character), potential(Character),
+    weapon(Weapon), potential(Weapon).
+
+
 %% Checks if an accusation is possible and informs the player if this is the case
 checkForAccusation :- accusation(Character, Weapon, Room),
                       accusescript(Character, Weapon, Room).
@@ -269,7 +297,17 @@ assertHas(Player, Card) :-
     assert(has(Player, Card)),
     allPlayers(Players), delete(Players, Player, Others),
     forall(member(P, Others), assertLacks(P, Card)),
+    checkNumKnownCards(Player),
     retract(potential(Card)).
+
+%% Check to see if we know all the cards a player has. If so, assert that they lack
+%% all the other cards.
+checkNumKnownCards(Player) :-
+    numCards(Player, N), hasAll(Player, PlayerCards), length(PlayerCards, N), !,
+    allType(potential, Cards), subtract(Cards, PlayerCards, RestCards),
+    forall(member(C, RestCards), assertLacks(Player, C)).
+checkNumKnownCards(_).
+
 
 allPlayers(Players) :- findall(P, player(P), Players).
 

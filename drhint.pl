@@ -335,20 +335,11 @@ checkNumKnownCards(_).
 
 allPlayers(Players) :- findall(P, player(P), Players).
 
-%% Third argument is all players whose turn comes between Player1 and Player2.
-%% TODO make this function not so stupid
-playersBetween(Player1,Player1,[]) :- !.
-playersBetween(Player1,Player2,[]) :- next(Player1,Player2), !.
-playersBetween(Player1,Player2,[Next]) :-
-    next(Player1,Next), next(Next,Player2), !.
-playersBetween(Player1,Player2,[Next1,Next2]) :-
-    next(Player1,Next1), next(Next1,Next2), next(Next2,Player2), !.
-playersBetween(Player1,Player2,[Next1,Next2,Next3]) :-
-    next(Player1,Next1), next(Next1,Next2), next(Next2,Next3), next(Next3,Player2), !.
-playersBetween(Player1,Player2,[Next1,Next2,Next3,Next4]) :-
-    next(Player1,Next1), next(Next1,Next2), next(Next2,Next3),
-    next(Next3,Next4), next(Next4,Player2), !.
-    
+% Tweens is the number of players between, but not including StartPlayer and EndPlayer.
+playersBetween(StartPlayer, NextPlayer, []) :- next(StartPlayer, NextPlayer), !.
+playersBetween(StartPlayer, EndPlayer, [Prev|Tweens]) :-
+    next(Prev, EndPlayer), !, playersBetween(StartPlayer, Prev, Tweens).
+
 
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 %% writeline(String) :- writef("%s", [String]).

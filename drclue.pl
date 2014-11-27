@@ -6,6 +6,7 @@
 
 %% Start Dr. Clue here!    
 clue :-
+    % remove all previous facts.
     retractall(has(_,_)),
     retractall(lacks(_,_)),    
     retractall(room(_)),
@@ -18,7 +19,6 @@ clue :-
     retractall(potential(_)),
     retractall(numCards(_,_)),
     retractall(playerRoom(_)),
-
 
     nl, write('Welcome to Dr. Clue!'), nl, nl,
     write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
@@ -380,14 +380,6 @@ checkNumKnownCards(_) :- write('nothing deduced').
 getNumCards(Player, NumCards) :-
     validNumCards(NumCards), numCards(Player, NumCards).
     
-%% TODO
-%% Check if Dr. Clue knows the player lacks all the cards except X cards, where X is
-%% the number of cards in their hand we don't know the identity of. If so, assert that
-%% they have these cards
-%checkNumUnknownCards(Player) :-
- %   numCards(Player, NumCards), numKnown(Player, NumKnown), 
-    
-
 allPlayers(Players) :- findall(P, player(P), Players).
 
 %% True if the list contains all players whose turn comes between StartPlayer and EndPlayer.

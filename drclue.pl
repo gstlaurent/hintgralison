@@ -148,7 +148,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Game play starts here.
+%% Start Player's turn.
 gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,

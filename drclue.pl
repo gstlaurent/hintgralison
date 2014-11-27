@@ -1,7 +1,7 @@
 :- expects_dialect(sicstus).
 
 :- dynamic has/2, lacks/2, room/1, weapon/1, character/1, player/1,
-   me/1, location/2, next/2, firstPlayer/1, potential/1, numCards/2,
+   me/1, next/2, firstPlayer/1, potential/1, numCards/2,
    playerRoom/1, inEnvelope/1.
 
 %% IF LOTS LOF EXTRA TIME:
@@ -19,6 +19,20 @@ bug: stopped giving suggestion suggestion
 
 %% Start Dr. Clue here!    
 clue :-
+    retractall(has(_,_)),
+    retractall(lacks(_,_)),    
+    retractall(room(_)),
+    retractall(weapon(_)),
+    retractall(character(_)),
+    retractall(player(_)),
+    retractall(me(_)),
+    retractall(next(_,_)),
+    retractall(firstPlayer(_)),
+    retractall(potential(_)),
+    retractall(numCards(_,_)),
+    retractall(playerRoom(_)),
+    retractall(inEnvelope(_)),
+
     nl, write('Welcome to Dr. Clue!'), nl, nl,
     write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
     setup,!,
@@ -34,33 +48,20 @@ clue :-
 %% all of the cards in the game, the names of the players, and the user's cards.
 setup :-
     write('Start by entering the names of all the rooms on your clue board.'), nl,
-    retractall(potential(_)),
-    retractall(room(_)),
-    retractall(playerRoom(_)),
-    retractall(inEnvelope(_)),
     getInfo(room), nl,
 
     write('Enter the names of all the weapons in your game.'), nl,
-    retractall(weapon(_)),
     getInfo(weapon), nl,
 
     write('Enter the names of all the suspects in your game.'), nl,
-    retractall(character(_)),
     getInfo(character), nl,
 
     write('Next, enter the players, followed by how many cards they each have, starting with the player who will go first.'), nl,
-    retractall(next(_,_)),
-    retractall(player(_)),
-    retractall(firstPlayer(_)),
-    retractall(numCards(_,_)),
     getPlayers, nl,
 
-    retractall(me(_)),
     getMyName,
 
     write('Now, enter your cards.'), nl,
-    retractall(has(_,_)),
-    retractall(lacks(_,_)),
     getInfo(card), nl.
 
 %% Prompt the user to enter the name of a type of card (for example, a weapon card).
@@ -140,17 +141,19 @@ listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is k
 %% Print all the cards that could be in the envelope. That is, all cards that are not
 %% known to be in any player's hand.
 listAllPotential :-
-    allType(potential, Cards),
+    all(potential, Cards),
     write('Cards that may be in the envelope: '), writeln(Cards). 
 
 %% Print all the cards that must be in the envelope.
 listAllKnown :-
-    allType(inEnvelope, Known),
+    allKnown(Known),
     write('Cards that must be in the envelope: '), writeln(Known).
 
 %% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
 allType(Type, Items) :- findall(I, call(Type, I), Items).
 
+allKnown(Known) :- allType(inEnvelope, Items), removeDuplicates(Items, Known).
+        
 %% True if Cards is all the cards Dr. Clue knows Player has.
 hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
 
@@ -412,8 +415,19 @@ playersBetween(StartPlayer, EndPlayer, [Prev|Tweens]) :-
 %% Read input from the user, allowing them to use punctuation, spaces, etc.
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
 
+
+% removeDuplicates(L1,L2) returns true if list L2 is the result of removing all
+% duplicate elements from list L1 such that the last duplicates in the list are
+% the ones that remain.
+removeDuplicates([],[]).
+removeDuplicates([X|Xs],[X|Ys]) :- not(member(X,Xs), no_duplicates(Xs,Ys).
+removeDuplicates([X|Xs],Ys) :- member(X,Xs), no_duplicates(Xs,Ys).
+    
+
+
 %%%%%%%%% Test facts %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+ % TODO delete test facts
 character('scarlett').
 character('plum').
 character('peacock').

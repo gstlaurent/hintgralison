@@ -32,8 +32,8 @@ see everything it knows; then you can type
 
     db <ENTER>
 
-and it'll tell print out its database contents. But it'll tell you all that
-when the time comes, so for now, just rest easy and Clue away!
+and it'll print out its database contents. But it'll tell you all that when the
+time comes, so for now, just rest easy and Clue away!
 
 
 
@@ -94,7 +94,7 @@ showed that card, telling it instead that you passed.
 If you accidentally tell Dr. Clue the wrong thing -- such as that you were shown
 Green when you were really shown White, or that Player 2 passed, when in fact,
 Player 2 showed something -- then its database might be permanently confused.
-Unfortunatley, the only way to the Dr. Clue into a usable state after something
+Unfortunatley, the only way to get Dr. Clue into a usable state after something
 like that is to quit the program then reload and run it. There is no Undo; there
 is no Ctrl+Z.
 

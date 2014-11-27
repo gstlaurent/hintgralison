@@ -1,19 +1,8 @@
 :- expects_dialect(sicstus).
 
-:- dynamic has/2, lacks/2, maybe/2.
-
-:- dynamic room/1,
-   weapon/1,
-   character/1,
-   player/1,
-   me/1,
-   dead/1,
-   location/2,
-   next/2,
-   firstPlayer/1,
-   potential/1,
-   numCards/2.
-
+:- dynamic has/2, lacks/2, maybe/2, room/1, weapon/1, character/1, player/1,
+   me/1, dead/1, location/2, next/2, firstPlayer/1, potential/1, numCards/2,
+   playerRoom/1.
 
 %% IF LOTS LOF EXTRA TIME:
 %% auto generate number of cards per player
@@ -21,10 +10,7 @@
 
 % TODO write better intro to the game.
 /*
-fix so it doesn't ask you for a room when making a suggestion
-
-
-
+make it so it no longer asks for your room when you make a suggestion
 validate that card number is a number
 optionally: have it infer the number of cards
 
@@ -43,43 +29,43 @@ catches typos, but not cheating. If you say another player showed you a card the
 
 */
 
-
-    
+%% Start Dr. Clue here!    
 clue :-
-    write('Welcome to Dr. Clue!'), nl,
-    write('To begin, we will lead you through the initialization of the game.'), nl,
+    nl, write('Welcome to Dr. Clue!'), nl, nl,
+    write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
     setup,!,
     write('Setup is complete. It\'s time to begin the game!'), nl,
     write('Dr. Clue will inform you if it is your turn and you are able to make a correct accusation.'), nl,
+    write('Dr. Clue will also help you make a suggestion by offering cards you should suggest.'), nl, nl,
     firstPlayer(X),
     gameLoop(X). % start the game with the first player's turn.
 
-%%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% GAME SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO better wording of instructions.
+%% Lead the user through the steps to initialize the game. This includes entering
+%% all of the cards in the game, the names of the players, and the user's cards.
 setup :-
     write('Start by entering the names of all the rooms on your clue board.'), nl,
     retractall(potential(_)),
     retractall(room(_)),
+    retractall(playerRoom(_)),
     getInfo(room), nl,
 
-    write('Enter the names of all the weapons in the game.'), nl,
+    write('Enter the names of all the weapons in your game.'), nl,
     retractall(weapon(_)),
     getInfo(weapon), nl,
 
-    write('Enter the names of all the characters in your game.'), nl,
-    write('These are the names of all the people who may have committed the murder, not just the current players.'), nl,
+    write('Enter the names of all the suspects in your game.'), nl,
     retractall(character(_)),
     getInfo(character), nl,
 
-    write('Next, enter the players, and how many cards each has, starting with the player who will go first.'), nl,
+    write('Next, enter the players, followed by how many cards they each have, starting with the player who will go first.'), nl,
     retractall(next(_,_)),
     retractall(player(_)),
     retractall(firstPlayer(_)),
     retractall(numCards(_,_)),
     getPlayers, nl,
 
-    write('Which player are you? '),
     retractall(me(_)),
     getMyName,
 
@@ -88,13 +74,15 @@ setup :-
     retractall(lacks(_,_)),
     getInfo(card), nl.
 
-
+%% Prompt the user to enter the name of a type of card (for example, a weapon card).
 getInfo(Type) :-
     write('Enter the name of a '), write(Type), write(' or hit ENTER if there are no more '),
     write(Type), write('s: '),
     readline(Entry),
     input(Type, Entry).
 
+%% Store card X of the given type in the database.
+%% Used both to input the cards in the game and the cards in the user's hand.
 input(_, '') :- !.
 input(room,X) :- assert(room(X)), assert(potential(X)), getInfo(room).
 input(weapon,X) :- assert(weapon(X)), assert(potential(X)), getInfo(weapon).
@@ -103,65 +91,80 @@ input(character,X) :- assert(character(X)), assert(potential(X)),
 input(card,X) :- room(X),!, me(Y), assertHas(Y,X), getInfo(card).
 input(card,X) :- weapon(X),!, me(Y), assertHas(Y,X), getInfo(card).
 input(card,X) :- character(X),!, me(Y), assertHas(Y,X), getInfo(card).
-input(card,_) :- write('That\'s not a valid card. '), nl, listAllCards, getInfo(card).
+input(card,_) :- write('That\'s not a valid card. '), nl, nl, listAllCards, getInfo(card).
 
+%% Prompt the user to enter the names and number of cards for each player.
 getPlayers :-
-    write('Enter first player: '), readline(First),
+    write('Enter the first player: '), readline(First),
     write('How many cards does this player have? '), readline(NumCards),
-    write('Enter next player: '), readline(Next),
+    write('Enter the next player: '), readline(Next),
     assert(player(First)),
     atom_number(NumCards, N), assert(numCards(First,N)), 
     assert(firstPlayer(First)),
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
 
+%% Continue the process of entering the names and number of cards for each player.
 assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     write('How many cards does this player have? '), readline(NumCards),
     atom_number(NumCards, N), assert(numCards(Previous, N)),
     assert(next(Previous, Current)),
     assert(player(Current)),
-    write('Enter next player or hit ENTER if there are no more players: '),
+    write('Enter the next player or hit ENTER if there are no more players: '),
     readline(Next), assertNextPlayer(First, Current, Next).
 
-getMyName :- readline(Character), inputMyName(Character).
+getMyName :- write('Which player are you? '), readline(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-showDatabase :- listAllCards, listPlayers, listMe, nl, listAllPlayerCards,listAllPotentials.
+%% Display all the information Dr. Clue knows.
+showDatabase :- write('******************* Database Contents **********************'), nl,
+                listAllCards, listPlayers, listMe, nl, listAllPlayerCards,listAllPotentials,
+                write('************************************************************'), nl.
 
+%% Print out all the valid names for suspects, weapons, and rooms.
 listAllCards :- listCards(character), listCards(weapon), listCards(room).
 
-listCards(Type) :- allType(Type, Cards), write('The '), write(Type), write('s are: '), writeln(Cards),nl.
+%% Print out all the cards that satisfy the predicate Type.
+listCards(Type) :- allType(Type, Cards), write('The '), write(Type), write('s are: '), writeln(Cards).
 
-listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players),nl.
+%% Print out all the names of the people playing this round of clue.
+listPlayers :- allPlayers(Players), write('The players are: '), writeln(Players).
 
+%% Print out the name of the player Dr. Clue is helping.
 listMe :- me(Player), write('You are '), write(Player), nl.
 
+%% Print out everything Dr. Clue knows about the cards in each player's hand.
 listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerCards(P)).
 
-listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' has these cards: '),
+%% Print out everything Dr. Clue knows about the cards in Player's hand.
+listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is known to have these cards: '),
                            writeln(HasCards),
                            lacksAll(Player, LacksCards), write(Player),
                            write(' does not have any of these cards: '), writeln(LacksCards), nl.
 
-%% Write all the cards that are not known to be in any player's hand
+%% Print all the cards that are not known to be in any player's hand.
 listAllPotentials :-
     allType(potential,Cards),
     write('Cards that may be in the envelope: '), writeln(Cards). 
 
-%% Items is all things of type Type
+%% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
 allType(Type, Items) :- findall(I, call(Type, I), Items).
-    
+
+%% True if Cards is all the cards Dr. Clue knows Player has.
 hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
+
+%% True if Cards is all the cards Dr. Clue knows Player does not have.
 lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% TODO comment this function.
 gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,
@@ -174,12 +177,14 @@ gameLoop(Player) :-
     suggestionPrompt(Player,X).
 gameLoop(Player) :-
     write('It\'s '), write(Player), write('\'s turn.'),nl,
-    write('Type "suggest" if "), write(Player), write(" made a suggestion or accusation.'), nl,
+    write('Type "suggest" if '), write(Player), write(' made a suggestion or accusation.'), nl,
     write('Type "db" to see the database.'), nl,
     write('Hit enter to move to the next player. '),
     readline(X), 
     suggestionPrompt(Player,X).
 
+%% If Player is the user, offer a suggestion to make, then get the player's suggestion,
+%% If Player is another player, get their suggestion.
 suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
 % If an accusation can be made after the suggestion, let the player know
 suggestionPrompt(Player, suggest) :-
@@ -198,6 +203,15 @@ suggestionPrompt(Player,'') :- nl, next(Player, Next), gameLoop(Next).
 suggestionPrompt(Player,_) :-
     write('Invalid input. Try again'), nl, gameLoop(Player).
 
+%% Prompt for the cards Player suggested, making sure that each card entered is
+%% a valid card name.
+getSuggestion(Player) :-
+    me(Player), !,
+    playerRoom(Room),
+    %% Do not prompt user for room since they've already told us what room they're in.
+    write('Enter the CHARACTER suggestion: '), readline(Character),
+    write('Enter the WEAPON suggestion: '), readline(Weapon),
+    validateSuggestion(Player,Character,Weapon,Room).
 getSuggestion(Player) :-
     write('Enter the CHARACTER suggestion: '), readline(Character),
     write('Enter the WEAPON suggestion: '), readline(Weapon),
@@ -207,8 +221,10 @@ getSuggestion(Player) :-
 %% Ensures a valid suggestion was made before moving on.
 validateSuggestion(Player,Character, Weapon, Room) :-
     character(Character), weapon(Weapon), room(Room), !, makeSuggestion(Player,Character,Weapon,Room).
-validateSuggestion(Player,_,_,_) :- write('That is not a valid suggestion'), nl, listAllCards, getSuggestion(Player).
+validateSuggestion(Player,_,_,_) :- nl, write('That is not a valid suggestion!'), nl, listAllCards, getSuggestion(Player).
 
+%% Prompt for the player who disproved a suggestion and the card they showed, making
+%% sure the player name and card are valid before recording them.
 makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
     %me(CurrentPlayer),
     write('Name the PLAYER who showed a card (or just hit ENTER if no one could show anything): '),
@@ -217,9 +233,10 @@ makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
     readline(Card),
     validateAndRecordSuggestion(CurrentPlayer,Character,Weapon,Room,DisprovingPlayer,Card).
 
-
+%% Check that DisprovingPlayer and Card are valid, and enter this information
+%% into the database before continuing with the next player's turn.
 %% No one showed a card.
-validateAndRecordSuggestion(Current,Character,Weapon,Room,'','') :- !,
+validateAndRecordSuggestion(Current,Character,Weapon,Room,'','') :-
     suggestion(Current,Character,Weapon,Room,'',''), !,
     next(Current,Next), gameLoop(Next).
 %% Valid values of DisprovingPlayer and Card were given.
@@ -230,55 +247,58 @@ validateAndRecordSuggestion(Current,Character,Weapon,Room,DisprovingPlayer,Card)
     next(Current,Next), gameLoop(Next).
 %% Invalid value given for either DisprovingPlayer or Card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
-    write('Invalid player or card entered. Please try again.'),nl,
+    nl, write('Invalid player or card entered! Please try again.'),nl,nl,
     listPlayers,
     write('The possible cards shown are: '), write(Character), write(', '),
-    write(Weapon), write(', '), write(Room), nl,
+    write(Weapon), write(', '), write(Room), nl,nl,
     makeSuggestion(Current,Character,Weapon,Room).
 
 
-%% Adds to DB knowledge gained from this round of my suggestion.
-% TODO: make generic 'suggestion' that can assert maybes. Have shorter version, suggestion based on generic
+%% Add to database knowledge gained from this round of my suggestion.
 %%  suggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
 %% No one showed a card. Inspecting Player could be bluffing and have some of the cards, but no other
 %% players can have any of them.
-suggestion(InspectingPlayer, Character, Weapon, Room, '', '') :-
+suggestion(InspectingPlayer, Character, Weapon, Room, '', '') :- !,
     allPlayers(Players), delete(Players, InspectingPlayer, Others),
     forall(member(P, Others), assertLacksTrio(P, Character,Weapon,Room)), !.
 suggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :- !,
     playersBetween(InspectingPlayer,DisprovingPlayer,Between),
     forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)), !.
 %TODO. record that one of these cards is in DisprovingPlayer's hands.
-suggestion(_, _, _, _, DisprovingPlayer, DisprovingCard) :-
+suggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
+    playersBetween(InspectingPlayer,DisprovingPlayer,Between),
+    forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)),
     assertHas(DisprovingPlayer, DisprovingCard), !. 
 
-
+%% Prompt for user's current room so that a valid suggestion can be offered.
 offerSuggestion :-
     write('What room are you in? '),
     readline(Room),
     verifyAndSuggest(Room).
 
+%% If room given is in the database, offer the player a suggestion. Otherwise,
+%% try again to get a valid room.
 verifyAndSuggest(Room) :-
-    room(Room), !, writeSuggestion(Room).
+    room(Room), !, assert(playerRoom(Room)), writeSuggestion(Room).
 verifyAndSuggest(_) :-
-    write('That is not a valid room.'),
+    write('That is not a valid room.'), nl,
     listCards(room),
     % Get the player to enter the room again.
     offerSuggestion. 
 
+%% Offer the player a suggestion based on the information in the database.
 writeSuggestion(Room) :-
-    findSuggestion(Character, Weapon, Room),
+    findSuggestion(Character, Weapon),
     write('You should suggest that '), write(Character),
     write(' murdered somebody in the '), write(Room),
-    write(' with the '), write(Weapon), nl.
+    write(' with the '), write(Weapon), write('.'), nl.
 
-%% Very simple suggester. Does not bluff or strategize. TODO Improve this!
-findSuggestion(Character, Weapon, Room) :-
+%% Very simple suggester. Does not bluff or strategize.
+findSuggestion(Character, Weapon) :-
     character(Character), potential(Character),
     weapon(Weapon), potential(Weapon).
 
-
-%% Checks if an accusation is possible and informs the player if this is the case
+%% Check if an accusation is possible and inform the player if this is the case
 checkForAccusation :- accusation(Character, Weapon, Room),
                       accusescript(Character, Weapon, Room).
 checkForAccusation.
@@ -289,6 +309,7 @@ accusation(Character, Weapon, Room) :-
    weapon(Weapon), allLack(Weapon),
    room(Room), allLack(Room).
 
+%% Let the user know the accusation they should make.
 accusescript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
   nl,
@@ -301,21 +322,18 @@ accusescript(Character, Weapon, Room) :-
 
 %%%%%%%%%%%%%%%%%%%%%%% HELPER FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%normalizePlayer(PotentialPlayer, PlayerOrNone) :-
-%    not(player(PotentialPlayer)), PlayerOrNone = none.
-%normalizePlayer(PotentialPlayer, PlayerOrNone) :- PlayerOrNone = PotentialPlayer.
-
+%% Store in the database that the given player does not have the 3 given cards.
 assertLacksTrio(Player, Character, Weapon, Room) :-
     assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
 
-%% assertLacks and assertHas creates proper assertions if necessary.
+%% assertLacks and assertHas create proper assertions if necessary.
 assertLacks(Player, Card) :- lacks(Player, Card), !.
 assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
 
-%% True when there are no players holding the given cardd
+%% True when there are no players holding the given card.
 allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
-%% Ensures other players lack the card, if neccessary, and removes card from potentials.
+%% Ensure other players lack the card, if neccessary, and remove card from potential.
 assertHas(Player, Card) :- has(Player, Card), !.
 assertHas(Player, Card) :-
     assert(has(Player, Card)),
@@ -324,7 +342,7 @@ assertHas(Player, Card) :-
     checkNumKnownCards(Player),
     retract(potential(Card)).
 
-%% Check to see if we know all the cards a player has. If so, assert that they lack
+%% Check to see if Dr. Clue know all the cards a player has. If so, assert that they lack
 %% all the other cards.
 checkNumKnownCards(Player) :-
     numCards(Player, N), hasAll(Player, PlayerCards), length(PlayerCards, N), !,
@@ -332,22 +350,15 @@ checkNumKnownCards(Player) :-
     forall(member(C, RestCards), assertLacks(Player, C)).
 checkNumKnownCards(_).
 
-
 allPlayers(Players) :- findall(P, player(P), Players).
 
-% Tweens is the number of players between, but not including StartPlayer and EndPlayer.
-playersBetween(StartPlayer, NextPlayer, []) :- next(StartPlayer, NextPlayer), !.
+%% True if the list contains all players whose turn comes between StartPlayer and EndPlayer.
+playersBetween(StartPlayer, EndPlayer, []) :- next(StartPlayer, EndPlayer), !.
 playersBetween(StartPlayer, EndPlayer, [Prev|Tweens]) :-
     next(Prev, EndPlayer), !, playersBetween(StartPlayer, Prev, Tweens).
 
-
+%% Read input from the user, allowing them to use punctuation, spaces, etc.
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
-%% writeline(String) :- writef("%s", [String]).
-writeline(String) :- write(String).
-
-%% listings/0 is handy for testing.
-listings :- listing(lacks(_, _)), listing(has(_, _)).
-
 
 %%%%%%%%% Test facts %%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -4,6 +4,7 @@
    me/1, next/2, firstPlayer/1, potential/1, numCards/2,
    playerRoom/1.
 
+% Not sure about the max number of cards a player could have, but 9 seems like plenty.
 validNumCards(1).
 validNumCards(2).
 validNumCards(3).
@@ -13,19 +14,6 @@ validNumCards(6).
 validNumCards(7).
 validNumCards(8).
 validNumCards(9).
-
-%% IF LOTS LOF EXTRA TIME:
-%% auto generate number of cards per player
-%% Make generic change so ENTER can finish things.
-
-/*
-
-validate that card number is a number
-optionally: have it infer the number of cards
-
-bug: stopped giving suggestion suggestion
-
-*/
 
 %% Start Dr. Clue here!    
 clue :-
@@ -171,7 +159,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% TODO comment this function.
+%% Game play starts here.
 gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,
@@ -424,68 +412,3 @@ readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(
 readnumber(Number) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom),
                       atom_number(Atom, Number).
 
-%%%%%%%%% Test facts %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
- % TODO delete test facts
-character('scarlett').
-character('plum').
-character('peacock').
-character('green').
-character('mustard').
-character('white').
-
-weapon('candlestick').
-weapon('knife').
-weapon('leadpipe').
-weapon('revolver').
-weapon('rope').
-weapon('wrench').
-
-room('kitchen').
-room('ballroom').
-room('conservatory').
-room('dining').
-room('billiard').
-room('library').
-room('study').
-room('hall').
-room('lounge').
-
-% our test game has only four players
-player('scarlett').
-player('plum').
-player('white').
-player('mustard').
-
-dead('mustard').
-
-me('plum').
-
-% next(CurrentPlayer, NextPlayer).
-next('scarlett', 'plum').
-next('plum', 'white').
-next('white', 'mustard').
-next('mustard', 'scarlett').
-
-%% has(Player, Card) :- fail.
-%% lacks(Player, Card) :- fail.
-%% maybe(Player, Card) :- fail.
-
-%% sample solution:
-lacks('white', 'green').
-lacks('white', 'study').
-lacks('white', 'knife').
-lacks('mustard', 'green').
-lacks('mustard', 'study').
-lacks('mustard', 'knife').
-lacks('scarlett', 'green').
-lacks('scarlett', 'study').
-lacks('scarlett', 'knife').
-
-lacks('plum', 'green').
-lacks('plum', 'study').
-lacks('plum', 'knife').
-
-%% TODO erase
-print:-
- forall(fact(P), writeln(P)).

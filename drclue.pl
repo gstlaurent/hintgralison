@@ -39,7 +39,7 @@ setup :-
 
     write('Enter the names of all the weapons in your game.'), nl,
     getInfo(weapon), nl,
-
+    
     write('Enter the names of all the suspects in your game.'), nl,
     getInfo(character), nl,
 
@@ -394,7 +394,7 @@ readnumber(Number) :- read_line(Input), string_codes(String, Input), string_to_a
                       atom_number(Atom, Number).
 
 % Not sure about the max number of cards a player could have in each
-% of the various clue boards, but 9 seems like plenty.
+% of the various clue boards, but 15 seems like plenty.
 validNumCards(1).
 validNumCards(2).
 validNumCards(3).
@@ -404,3 +404,10 @@ validNumCards(6).
 validNumCards(7).
 validNumCards(8).
 validNumCards(9).
+validNumCards(10).
+validNumCards(11).
+validNumCards(12).
+validNumCards(13).
+validNumCards(14).
+validNumCards(15).
+

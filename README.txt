@@ -58,26 +58,42 @@ feature #3.
 
 3.  Infers card disownership.
 Any time Dr. Clue finds out that a player has a card -- either from your
-suggestion or during the setup -- it realizes that no one else can have that
-card, so it adds that info to its database. But it also infers that players
-are lacking certain cards if, during a suggestion -- whether it's your or
-someone else's -- they had to give a pass without showing anything.
+suggestion, during the setup, or using inference as in #4 -- it realizes that
+no one else can have that card, so it adds that info to its database. But it
+also infers that players are lacking certain cards if, during a suggestion --
+whether it's your or someone else's -- they had to give a pass without showing
+anything.
 
-4.  Provides Suggestion Suggestions.
-Dr. Clue keeps track of cards you haven't seen yet. When you ask it to show
-you the database, it will tell you what these are; it calls those 'Cards that
-may be in the envelope'. So when it is your turn to make a suggestion, all you
-have to do is tell Dr. Clue what room you are in, and it will provide you with
-a recommended suggestion consisting of as many cards that you haven't seen yet
-as it can.
+4.  Infers card ownership.
+Have you ever wondered what that card is that another player is showing to one
+of your opponents when it isn't your turn? Well, now you can wonder less! If Dr.
+Clue already has determined that a player doesn't have two of the cards in
+a rival player's suggestion, but that player is showing a card anyway, then it
+knows that that player MUST own the third card, so it adds it to the database.
 
-5.  Makes Accusations!
+5.  Provides Suggestion Suggestions.
+Dr. Clue keeps track of cards which cards you've seen and which cards it has
+deduced information about. When it is time to make a suggestion all you have
+to do is tell Dr. Clue what room you are in, and it will provide you with
+a recommended Suggestion for the weapon and character, taking from the list of
+unknown cards when it can, and cards that it knows are in the envelope if there
+aren't any unknowns for that type.
+
+6.  Makes Accusations!
 If Dr. Clue has learned enough to know for certain what the three cards are that
 are in the envelope, then it let's you know! When you next have a chance (which
 might be immediately), you can make an accusation and WIN THE GAME!
 Congratulations, you! Congratulation, Dr. Clue!
 
+7.  Customizable dealing order.
+Sometimes the first player dealt to isn't the first player to have a turn. Dr.
+Clue doesn't mind! When stating the names of the different players, Dr. Clue
+will ask you how many cards each player has, and take it from there.
 
+8.  Iterative envelope-content inferrences.
+The moment that Dr. Clue realizes that everyone lacks a particular card, it
+adds that to the list of cards that MUST BE in the envelope. You can see this
+list during a database display.
 
 
 ****************************************************
@@ -108,7 +124,11 @@ Besides updating its database with card has and card has-nots, Dr. Clue doesn't
 keep track of what suggestions players are making. Consequently, it can't guess
 what cards or strategies might be lurking within opposing hands and minds.
 
-
+4.  Doesn't learn from wrong accusations.
+If another player makes an accusation that is wrong, then you have to just tell
+Dr. Clue to skip that player on that turn (and on subsequent turns, too, since
+that player no longer gets turns). So the database does not get updated
+and it learns nothing ... but YOU might.
 
 
 ****************************************************

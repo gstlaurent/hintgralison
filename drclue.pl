@@ -1,31 +1,19 @@
 :- expects_dialect(sicstus).
 
-:- dynamic has/2, lacks/2, maybe/2, room/1, weapon/1, character/1, player/1,
-   me/1, dead/1, location/2, next/2, firstPlayer/1, potential/1, numCards/2,
-   playerRoom/1.
+:- dynamic has/2, lacks/2, room/1, weapon/1, character/1, player/1,
+   me/1, location/2, next/2, firstPlayer/1, potential/1, numCards/2,
+   playerRoom/1, inEnvelope/1.
 
 %% IF LOTS LOF EXTRA TIME:
 %% auto generate number of cards per player
 %% Make generic change so ENTER can finish things.
 
-% TODO write better intro to the game.
 /*
-make it so it no longer asks for your room when you make a suggestion
+
 validate that card number is a number
 optionally: have it infer the number of cards
 
 bug: stopped giving suggestion suggestion
-
-bug: doesn't assert that players lack cards when they don't show any
-Graham: fix playersBetween and suggestion (rename)
-
-
-write function that checks how many cards player lacks and fills in ones they therefore must have??
-
-
-benefits: not like prolog. can enter spaces, punctuation in their entries (for example, "Mrs. White")
-
-catches typos, but not cheating. If you say another player showed you a card they could not have shown, will not catch this.
 
 */
 
@@ -35,7 +23,7 @@ clue :-
     write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
     setup,!,
     write('Setup is complete. It\'s time to begin the game!'), nl,
-    write('Dr. Clue will inform you if it is your turn and you are able to make a correct accusation.'), nl,
+    write('As soon as you are able to make a correct accusation, Dr. Clue will let you know.'), nl,
     write('Dr. Clue will also help you make a suggestion by offering cards you should suggest.'), nl, nl,
     firstPlayer(X),
     gameLoop(X). % start the game with the first player's turn.
@@ -49,6 +37,7 @@ setup :-
     retractall(potential(_)),
     retractall(room(_)),
     retractall(playerRoom(_)),
+    retractall(inEnvelope(_)),
     getInfo(room), nl,
 
     write('Enter the names of all the weapons in your game.'), nl,
@@ -116,14 +105,15 @@ assertNextPlayer(First, Previous, Current) :-
 
 getMyName :- write('Which player are you? '), readline(Character), inputMyName(Character).
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
-inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, getMyName.
+inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, nl, getMyName.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Display all the information Dr. Clue knows.
 showDatabase :- write('******************* Database Contents **********************'), nl,
-                listAllCards, listPlayers, listMe, nl, listAllPlayerCards,listAllPotentials,
+                listAllCards, nl, listPlayers, listMe, nl, listAllPlayerCards,
+                listAllPotential, listAllKnown,
                 write('************************************************************'), nl.
 
 %% Print out all the valid names for suspects, weapons, and rooms.
@@ -147,10 +137,16 @@ listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is k
                            lacksAll(Player, LacksCards), write(Player),
                            write(' does not have any of these cards: '), writeln(LacksCards), nl.
 
-%% Print all the cards that are not known to be in any player's hand.
-listAllPotentials :-
-    allType(potential,Cards),
+%% Print all the cards that could be in the envelope. That is, all cards that are not
+%% known to be in any player's hand.
+listAllPotential :-
+    allType(potential, Cards),
     write('Cards that may be in the envelope: '), writeln(Cards). 
+
+%% Print all the cards that must be in the envelope.
+listAllKnown :-
+    allType(inEnvelope, Known),
+    write('Cards that must be in the envelope: '), writeln(Known).
 
 %% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
 allType(Type, Items) :- findall(I, call(Type, I), Items).
@@ -169,7 +165,7 @@ gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,
     %% Player can make an accusation if it is their turn, even if not in a room.
-    checkForAccusation,
+    checkForAccusation(Player),
     write('To make a suggestion, type "suggest".'), nl,
     write('To move to the next player without making a suggestion, hit enter.'), nl,
     write('To see the database, type "db". '),
@@ -189,16 +185,10 @@ suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
 % If an accusation can be made after the suggestion, let the player know
 suggestionPrompt(Player, suggest) :-
     me(Player),
-    % TODO suggestCards for the player - check what room the player is in.
     offerSuggestion, !,
-    getSuggestion(Player),
-    checkForAccusation,
-    next(Player, Next),
-    gameLoop(Next).
+    getSuggestion(Player).
 suggestionPrompt(Player, suggest) :-
-    getSuggestion(Player),
-    next(Player, Next),
-    gameLoop(Next).
+    getSuggestion(Player).
 suggestionPrompt(Player,'') :- nl, next(Player, Next), gameLoop(Next).
 suggestionPrompt(Player,_) :-
     write('Invalid input. Try again'), nl, gameLoop(Player).
@@ -238,13 +228,13 @@ makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
 %% No one showed a card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,'','') :-
     suggestion(Current,Character,Weapon,Room,'',''), !,
-    next(Current,Next), gameLoop(Next).
+    next(Current,Next), checkForAccusation(Current), gameLoop(Next).
 %% Valid values of DisprovingPlayer and Card were given.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,DisprovingPlayer,Card) :-
     player(DisprovingPlayer),
     (==('',Card);==(Character,Card); ==(Weapon,Card);==(Room,Card)),!,
     suggestion(Current,Character,Weapon,Room,DisprovingPlayer,Card), !,
-    next(Current,Next), gameLoop(Next).
+    next(Current,Next), checkForAccusation(Current), gameLoop(Next).
 %% Invalid value given for either DisprovingPlayer or Card.
 validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
     nl, write('Invalid player or card entered! Please try again.'),nl,nl,
@@ -254,21 +244,43 @@ validateAndRecordSuggestion(Current,Character,Weapon,Room,_,_) :-
     makeSuggestion(Current,Character,Weapon,Room).
 
 
-%% Add to database knowledge gained from this round of my suggestion.
+%% Add to database knowledge gained from this round of suggestion.
 %%  suggestion/6:(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard)
 %% No one showed a card. Inspecting Player could be bluffing and have some of the cards, but no other
 %% players can have any of them.
 suggestion(InspectingPlayer, Character, Weapon, Room, '', '') :- !,
     allPlayers(Players), delete(Players, InspectingPlayer, Others),
-    forall(member(P, Others), assertLacksTrio(P, Character,Weapon,Room)), !.
+    forall(member(P, Others), assertLacksTrio(P, Character, Weapon, Room)), !.
 suggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, '') :- !,
     playersBetween(InspectingPlayer,DisprovingPlayer,Between),
-    forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)), !.
-%TODO. record that one of these cards is in DisprovingPlayer's hands.
+    forall(member(P,Between), assertLacksTrio(P, Character, Weapon, Room)),
+    deduceCardShown(DisprovingPlayer, Character, Weapon, Room),!.
 suggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, DisprovingCard) :-
-    playersBetween(InspectingPlayer,DisprovingPlayer,Between),
-    forall(member(P,Between), assertLacksTrio(P,Character,Weapon,Room)),
-    assertHas(DisprovingPlayer, DisprovingCard), !. 
+    playersBetween(InspectingPlayer, DisprovingPlayer, Between),
+    forall(member(P, Between), assertLacksTrio(P, Character, Weapon, Room)),
+    assertHas(DisprovingPlayer, DisprovingCard), !.
+
+%% Try to figure out what card DisprovingPlayer showed to another player.
+%% We already know the player has one of the cards. No new information gathered.
+deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :- 
+    has(DisprovingPlayer,Character); has(DisprovingPlayer,Room); has(DisprovingPlayer,Weapon), !.
+%% We know DisprovingPlayer cannot have two of the cards. Therefore, DisprovingPlayer must have
+%% shown the other card!
+deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
+    (lacks(DisprovingPlayer, Character) ; has(_, Character) ; inEnvelope(Character)),
+    (lacks(DisprovingPlayer, Room) ; has(_, Room) ; inEnvelope(Room)),
+    assertHas(DisprovingPlayer, Weapon), !.
+deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
+    (lacks(DisprovingPlayer, Character) ; has(_, Character) ; inEnvelope(Character)),
+    (lacks(DisprovingPlayer, Weapon) ; has(_, Weapon) ; inEnvelope(Weapon)),
+    assertHas(DisprovingPlayer, Room), !.
+deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
+    (lacks(DisprovingPlayer, Weapon) ; has(_, Weapon) ; inEnvelope(Weapon)),
+    (lacks(DisprovingPlayer, Room) ; has(_, Room) ; inEnvelope(Room)),
+    assertHas(DisprovingPlayer, Character), !.
+%% We cannot deduce the card shown.
+deduceCardShown(_,_,_,_).
+
 
 %% Prompt for user's current room so that a valid suggestion can be offered.
 offerSuggestion :-
@@ -282,7 +294,7 @@ verifyAndSuggest(Room) :-
     room(Room), !, assert(playerRoom(Room)), writeSuggestion(Room).
 verifyAndSuggest(_) :-
     write('That is not a valid room.'), nl,
-    listCards(room),
+    listCards(room), nl,
     % Get the player to enter the room again.
     offerSuggestion. 
 
@@ -293,24 +305,30 @@ writeSuggestion(Room) :-
     write(' murdered somebody in the '), write(Room),
     write(' with the '), write(Weapon), write('.'), nl.
 
-%% Very simple suggester. Does not bluff or strategize.
+%% Suggest cards that may be in the envelope. Does not bluff or strategize.
 findSuggestion(Character, Weapon) :-
     character(Character), potential(Character),
     weapon(Weapon), potential(Weapon).
 
+
 %% Check if an accusation is possible and inform the player if this is the case
-checkForAccusation :- accusation(Character, Weapon, Room),
-                      accusescript(Character, Weapon, Room).
-checkForAccusation.
+checkForAccusation(Player) :-
+    me(Player), 
+    accusation(Character, Weapon, Room), !,
+    accusescript(Character, Weapon, Room).
+checkForAccusation(_) :-
+    accusation(Character, Weapon, Room), !,
+    accuseLaterScript(Character, Weapon, Room).
+checkForAccusation(_).
 
 %% Produce True when the given variables are indisputedly in the Clue envelope.
 accusation(Character, Weapon, Room) :-
-   character(Character), allLack(Character),
-   weapon(Weapon), allLack(Weapon),
-   room(Room), allLack(Room).
+   character(Character), inEnvelope(Character),
+   weapon(Weapon), inEnvelope(Weapon),
+   room(Room), inEnvelope(Room).
 
 %% Let the user know the accusation they should make.
-accusescript(Character, Weapon, Room) :-
+accuseLaterScript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
   nl,
   writeln('You should make an accusation! Shout out the following now:'),
@@ -319,6 +337,12 @@ accusescript(Character, Weapon, Room) :-
   write(ROOM), write(' with the '), write(WEAPON), write('!********'),
   nl, writeln('*******************************************************************************************').
 
+%% Let the user know they should make an accusation on their next turn.
+accusescript(Character, Weapon, Room) :-
+  nl,
+  write('We\'ve solved the case! On your next turn, accuse '), write(Character),
+  write(' of murdering somebody in the '), write(Room), write(' with the '), write(Weapon),
+  write('.'), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%% HELPER FUNCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -330,25 +354,53 @@ assertLacksTrio(Player, Character, Weapon, Room) :-
 assertLacks(Player, Card) :- lacks(Player, Card), !.
 assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
 
-%% True when there are no players holding the given card.
-allLack(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
+%% True when there are no players holding the given card, meaning it must be in the envelope.
+inEnvelope(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
 %% Ensure other players lack the card, if neccessary, and remove card from potential.
 assertHas(Player, Card) :- has(Player, Card), !.
 assertHas(Player, Card) :-
     assert(has(Player, Card)),
+    retract(potential(Card)),
     allPlayers(Players), delete(Players, Player, Others),
     forall(member(P, Others), assertLacks(P, Card)),
     checkNumKnownCards(Player),
-    retract(potential(Card)).
+    deduceSolution.
 
-%% Check to see if Dr. Clue know all the cards a player has. If so, assert that they lack
-%% all the other cards.
+
+%% Deduce the murderer, murder weapon, or murder location by process of elimination:
+%% if we know that all the cards but one of a certain type are in players' hands,
+%% the final card must be in the envelope, and all the players lack this card.
+%% Add this information to the database.
+deduceSolution :- deduce(character), deduce(weapon), deduce(room).
+deduce(Type) :-
+    allType(potential, Potentials), allType(Type, Cards),
+    intersection(Potentials, Cards, [Suspect|Rest]), length([Suspect|Rest], 1),
+    assertInEnvelope(Suspect),
+    allPlayers(Players), forall(member(P, Players), assertLacks(P, Suspect)).
+deduce(_).
+
+%% Ensure Suspect is in the envelope, but do not add Suspect if already present
+assertInEnvelope(Suspect) :- inEnvelope(Suspect).
+assertInEnvelope(Suspect) :- asserta(inEnvelope(Suspect)).
+
+%% Check if Dr. Clue knows all the cards a player has. If so, assert that they lack
+%% all the other cards. 
 checkNumKnownCards(Player) :-
+    % update the cards the player lacks.
+    deduceSolution,
     numCards(Player, N), hasAll(Player, PlayerCards), length(PlayerCards, N), !,
     allType(potential, Cards), subtract(Cards, PlayerCards, RestCards),
     forall(member(C, RestCards), assertLacks(Player, C)).
 checkNumKnownCards(_).
+
+%% TODO
+%% Check if Dr. Clue knows the player lacks all the cards but the number of cards
+%% in their hand we don't know the identity of. If so, assert that they have these
+%% cards
+%checkNumUnknownCards(Player) :-
+ %   numCards(Player, NumCards), numKnown(Player, NumKnown), 
+    
 
 allPlayers(Players) :- findall(P, player(P), Players).
 

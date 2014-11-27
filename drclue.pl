@@ -4,17 +4,6 @@
    me/1, next/2, firstPlayer/1, potential/1, numCards/2,
    playerRoom/1.
 
-% Not sure about the max number of cards a player could have, but 9 seems like plenty.
-validNumCards(1).
-validNumCards(2).
-validNumCards(3).
-validNumCards(4).
-valdiNumCards(5).
-validNumCards(6).
-validNumCards(7).
-validNumCards(8).
-validNumCards(9).
-
 %% Start Dr. Clue here!    
 clue :-
     retractall(has(_,_)),
@@ -87,7 +76,7 @@ getPlayers :-
     write('How many cards does this player have? '), readnumber(NumCards),
     write('Enter the next player: '), readline(Next),
     assert(player(First)),
-    assert(numCards(First,NumCards)), 
+    assert(numCards(First,NumCards)),
     assert(firstPlayer(First)),
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
@@ -96,7 +85,7 @@ getPlayers :-
 assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
     write('How many cards does this player have? '), readnumber(NumCards),
-    assert(numCards(Previous, NumCards)),
+    assert(numCards(Current, NumCards)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter the next player or hit ENTER if there are no more players: '),
@@ -140,12 +129,12 @@ listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is k
 %% known to be in any player's hand.
 listAllPotential :-
     allType(potential, Cards),
-    write('Cards that may be in the envelope: '), writeln(Cards). 
+    write('These cards may be in the envelope, or they may be in another player\'s hand: '), writeln(Cards). 
 
 %% Print all the cards that must be in the envelope.
 listAllKnown :-
     allType(inEnvelope, Known),
-    write('Cards that must be in the envelope: '), writeln(Known).
+    write('These cards are DEFINITELY in the envelope: '), writeln(Known).
 
 %% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
 allType(Type, Items) :- findall(I, call(Type, I), Items).
@@ -392,9 +381,9 @@ getNumCards(Player, NumCards) :-
     validNumCards(NumCards), numCards(Player, NumCards).
     
 %% TODO
-%% Check if Dr. Clue knows the player lacks all the cards but the number of cards
-%% in their hand we don't know the identity of. If so, assert that they have these
-%% cards
+%% Check if Dr. Clue knows the player lacks all the cards except X cards, where X is
+%% the number of cards in their hand we don't know the identity of. If so, assert that
+%% they have these cards
 %checkNumUnknownCards(Player) :-
  %   numCards(Player, NumCards), numKnown(Player, NumKnown), 
     
@@ -412,3 +401,14 @@ readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(
 readnumber(Number) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom),
                       atom_number(Atom, Number).
 
+% Not sure about the max number of cards a player could have in each
+% of the various clue boards, but 9 seems like plenty.
+validNumCards(1).
+validNumCards(2).
+validNumCards(3).
+validNumCards(4).
+valdiNumCards(5).
+validNumCards(6).
+validNumCards(7).
+validNumCards(8).
+validNumCards(9).

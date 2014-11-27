@@ -141,7 +141,7 @@ listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is k
 %% Print all the cards that could be in the envelope. That is, all cards that are not
 %% known to be in any player's hand.
 listAllPotential :-
-    all(potential, Cards),
+    allType(potential, Cards),
     write('Cards that may be in the envelope: '), writeln(Cards). 
 
 %% Print all the cards that must be in the envelope.

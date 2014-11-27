@@ -328,7 +328,7 @@ accusation(Character, Weapon, Room) :-
    room(Room), inEnvelope(Room).
 
 %% Let the user know the accusation they should make.
-accuseLaterScript(Character, Weapon, Room) :-
+accusescript(Character, Weapon, Room) :-
   upcase_atom(Character, CHARACTER), upcase_atom(Weapon, WEAPON), upcase_atom(Room, ROOM),
   nl,
   writeln('You should make an accusation! Shout out the following now:'),
@@ -338,7 +338,7 @@ accuseLaterScript(Character, Weapon, Room) :-
   nl, writeln('*******************************************************************************************').
 
 %% Let the user know they should make an accusation on their next turn.
-accusescript(Character, Weapon, Room) :-
+accuseLaterScript(Character, Weapon, Room) :-
   nl,
   write('We\'ve solved the case! On your next turn, accuse '), write(Character),
   write(' of murdering somebody in the '), write(Room), write(' with the '), write(Weapon),

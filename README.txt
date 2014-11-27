@@ -4,7 +4,7 @@ DR. CLUE DOCUMENTATION
 
 Congratulations on your acquisition of the new Clue solving program, Dr. Clue!
 
-Dr. Clue is a very userfriendly program. To start it, open prolog and type:
+Dr. Clue is a very user-friendly program. To start it, open prolog and type:
 
     [drclue]. <ENTER>
 
@@ -15,10 +15,10 @@ That loads up the program. To run it, type:
 That's it! It'll walk you through the rest. First you'll setup the game, telling
 Dr. Clue things like what the rooms, weapons, and characters are, and who the
 players are and what their order is. Once you're done that, it's ready to help
-you play Clue! Just follow along with what it says and input information as
+you play Clue! Just follow along with what it says, inputting information as
 different players have their different turns. The more info you give it, the
 better it will be at helping you Win at Clue! Eventually, when it knows enough,
-it'll tell you to make an accusation! Do that as soon as you can and WIN THE
+it'll tell you to make an accusation. Do that as soon as you can and WIN THE
 GAME! Congratulations again!
 
 You can type things the way you always do: use capitals and lowercase, spaces,
@@ -26,7 +26,7 @@ punctuation -- you name it! Just hit <ENTER> when you're done typing, and Dr.
 Clue will understand. But be careful: every time you type something, you have
 to type it exactly the same way, so make sure you type it the way you want it
 the first time. Don't worry though, if you happen to forget exactly how you
-typed things, Dr. Clue will tell you and it'll let you know what your options
+typed things, Dr. Clue will notice and it'll let you know what your options
 really are. Sometimes Dr. Clue will even ask you preemptively if you want to
 see everything it knows; then you can type
 
@@ -70,7 +70,7 @@ as it can.
 
 5.  Makes Accusations!
 If Dr. Clue has learned enough to know for certain what the three cards are that
-are in the envelope, it let's you know! Then, when you next have a chance (which
+are in the envelope, then it let's you know! When you next have a chance (which
 might be immediately), you can make an accusation and WIN THE GAME!
 Congratulations, you! Congratulation, Dr. Clue!
 

@@ -2,20 +2,18 @@
 
 :- dynamic has/2, lacks/2, room/1, weapon/1, character/1, player/1,
    me/1, next/2, firstPlayer/1, potential/1, numCards/2,
-   playerRoom/1, inEnvelope/1.
+   playerRoom/1.
 
-%% IF LOTS LOF EXTRA TIME:
-%% auto generate number of cards per player
-%% Make generic change so ENTER can finish things.
-
-/*
-
-validate that card number is a number
-optionally: have it infer the number of cards
-
-bug: stopped giving suggestion suggestion
-
-*/
+% Not sure about the max number of cards a player could have, but 9 seems like plenty.
+validNumCards(1).
+validNumCards(2).
+validNumCards(3).
+validNumCards(4).
+valdiNumCards(5).
+validNumCards(6).
+validNumCards(7).
+validNumCards(8).
+validNumCards(9).
 
 %% Start Dr. Clue here!    
 clue :-
@@ -31,7 +29,7 @@ clue :-
     retractall(potential(_)),
     retractall(numCards(_,_)),
     retractall(playerRoom(_)),
-    retractall(inEnvelope(_)),
+
 
     nl, write('Welcome to Dr. Clue!'), nl, nl,
     write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
@@ -86,10 +84,10 @@ input(card,_) :- write('That\'s not a valid card. '), nl, nl, listAllCards, getI
 %% Prompt the user to enter the names and number of cards for each player.
 getPlayers :-
     write('Enter the first player: '), readline(First),
-    write('How many cards does this player have? '), readline(NumCards),
+    write('How many cards does this player have? '), readnumber(NumCards),
     write('Enter the next player: '), readline(Next),
     assert(player(First)),
-    atom_number(NumCards, N), assert(numCards(First,N)), 
+    assert(numCards(First,NumCards)), 
     assert(firstPlayer(First)),
     assert(next(First, Next)),
     assertNextPlayer(First, First, Next).
@@ -97,8 +95,8 @@ getPlayers :-
 %% Continue the process of entering the names and number of cards for each player.
 assertNextPlayer(First, Last, '') :- assert(next(Last, First)).
 assertNextPlayer(First, Previous, Current) :-
-    write('How many cards does this player have? '), readline(NumCards),
-    atom_number(NumCards, N), assert(numCards(Previous, N)),
+    write('How many cards does this player have? '), readnumber(NumCards),
+    assert(numCards(Previous, NumCards)),
     assert(next(Previous, Current)),
     assert(player(Current)),
     write('Enter the next player or hit ENTER if there are no more players: '),
@@ -146,14 +144,12 @@ listAllPotential :-
 
 %% Print all the cards that must be in the envelope.
 listAllKnown :-
-    allKnown(Known),
+    allType(inEnvelope, Known),
     write('Cards that must be in the envelope: '), writeln(Known).
 
 %% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
 allType(Type, Items) :- findall(I, call(Type, I), Items).
 
-allKnown(Known) :- allType(inEnvelope, Items), removeDuplicates(Items, Known).
-        
 %% True if Cards is all the cards Dr. Clue knows Player has.
 hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
 
@@ -163,7 +159,7 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 
 %%%%%%%%%%%%%%%%%%%%%%%% GAME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% TODO comment this function.
+%% Game play starts here.
 gameLoop(Player) :-
     me(Player), !,
     write('It\'s your turn!'), nl,
@@ -379,24 +375,22 @@ deduceSolution :- deduce(character), deduce(weapon), deduce(room).
 deduce(Type) :-
     allType(potential, Potentials), allType(Type, Cards),
     intersection(Potentials, Cards, [Suspect|Rest]), length([Suspect|Rest], 1),
-    assertInEnvelope(Suspect),
     allPlayers(Players), forall(member(P, Players), assertLacks(P, Suspect)).
 deduce(_).
-
-%% Ensure Suspect is in the envelope, but do not add Suspect if already present
-assertInEnvelope(Suspect) :- inEnvelope(Suspect).
-assertInEnvelope(Suspect) :- asserta(inEnvelope(Suspect)).
 
 %% Check if Dr. Clue knows all the cards a player has. If so, assert that they lack
 %% all the other cards. 
 checkNumKnownCards(Player) :-
     % update the cards the player lacks.
-    deduceSolution,
+    deduceSolution, validNumCards(N),
     numCards(Player, N), hasAll(Player, PlayerCards), length(PlayerCards, N), !,
     allType(potential, Cards), subtract(Cards, PlayerCards, RestCards),
     forall(member(C, RestCards), assertLacks(Player, C)).
-checkNumKnownCards(_).
+checkNumKnownCards(_) :- write('nothing deduced').
 
+getNumCards(Player, NumCards) :-
+    validNumCards(NumCards), numCards(Player, NumCards).
+    
 %% TODO
 %% Check if Dr. Clue knows the player lacks all the cards but the number of cards
 %% in their hand we don't know the identity of. If so, assert that they have these
@@ -414,75 +408,7 @@ playersBetween(StartPlayer, EndPlayer, [Prev|Tweens]) :-
 
 %% Read input from the user, allowing them to use punctuation, spaces, etc.
 readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom).
+%% Read a number from the user.
+readnumber(Number) :- read_line(Input), string_codes(String, Input), string_to_atom(String, Atom),
+                      atom_number(Atom, Number).
 
-
-% removeDuplicates(L1,L2) returns true if list L2 is the result of removing all
-% duplicate elements from list L1 such that the last duplicates in the list are
-% the ones that remain.
-removeDuplicates([],[]).
-removeDuplicates([X|Xs],[X|Ys]) :- not(member(X,Xs)), removeDuplicates(Xs,Ys).
-removeDuplicates([X|Xs],Ys) :- member(X,Xs), removeDuplicates(Xs,Ys).
-    
-
-
-%%%%%%%%% Test facts %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
- % TODO delete test facts
-character('scarlett').
-character('plum').
-character('peacock').
-character('green').
-character('mustard').
-character('white').
-
-weapon('candlestick').
-weapon('knife').
-weapon('leadpipe').
-weapon('revolver').
-weapon('rope').
-weapon('wrench').
-
-room('kitchen').
-room('ballroom').
-room('conservatory').
-room('dining').
-room('billiard').
-room('library').
-room('study').
-room('hall').
-room('lounge').
-
-% our test game has only four players
-player('scarlett').
-player('plum').
-player('white').
-player('mustard').
-
-dead('mustard').
-
-me('plum').
-
-% next(CurrentPlayer, NextPlayer).
-next('scarlett', 'plum').
-next('plum', 'white').
-next('white', 'mustard').
-next('mustard', 'scarlett').
-
-%% has(Player, Card) :- fail.
-%% lacks(Player, Card) :- fail.
-%% maybe(Player, Card) :- fail.
-
-%% sample solution:
-lacks('white', 'green').
-lacks('white', 'study').
-lacks('white', 'knife').
-lacks('mustard', 'green').
-lacks('mustard', 'study').
-lacks('mustard', 'knife').
-lacks('scarlett', 'green').
-lacks('scarlett', 'study').
-lacks('scarlett', 'knife').
-
-lacks('plum', 'green').
-lacks('plum', 'study').
-lacks('plum', 'knife').

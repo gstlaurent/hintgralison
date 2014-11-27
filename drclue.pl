@@ -420,8 +420,8 @@ readline(Atom) :- read_line(Input), string_codes(String, Input), string_to_atom(
 % duplicate elements from list L1 such that the last duplicates in the list are
 % the ones that remain.
 removeDuplicates([],[]).
-removeDuplicates([X|Xs],[X|Ys]) :- not(member(X,Xs), no_duplicates(Xs,Ys).
-removeDuplicates([X|Xs],Ys) :- member(X,Xs), no_duplicates(Xs,Ys).
+removeDuplicates([X|Xs],[X|Ys]) :- not(member(X,Xs), removeDuplicates(Xs,Ys).
+removeDuplicates([X|Xs],Ys) :- member(X,Xs), removeDuplicates(Xs,Ys).
     
 
 

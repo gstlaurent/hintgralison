@@ -1,3 +1,6 @@
+# Graham St-Laurent, i5l8, 23310121
+# Alison Clark, m0v8, 21464136
+
 *******************************
 DR. CLUE DOCUMENTATION
 *******************************
@@ -73,6 +76,8 @@ If Dr. Clue has learned enough to know for certain what the three cards are that
 are in the envelope, then it let's you know! When you next have a chance (which
 might be immediately), you can make an accusation and WIN THE GAME!
 Congratulations, you! Congratulation, Dr. Clue!
+
+
 
 
 ****************************************************

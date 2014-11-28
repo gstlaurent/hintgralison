@@ -252,19 +252,19 @@ suggestion(InspectingPlayer, Character, Weapon, Room, DisprovingPlayer, Disprovi
 %% We already know the player has one of the cards. No new information gathered.
 deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :- 
     has(DisprovingPlayer,Character); has(DisprovingPlayer,Room); has(DisprovingPlayer,Weapon), !.
-%% We know DisprovingPlayer cannot have two of the cards. Therefore, DisprovingPlayer must have
+%% We know DisprovingPlayer lacks two of the cards suggested. Therefore, DisprovingPlayer must have
 %% shown the other card!
 deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
-    (lacks(DisprovingPlayer, Character) ; has(_, Character) ; inEnvelope(Character)),
-    (lacks(DisprovingPlayer, Room) ; has(_, Room) ; inEnvelope(Room)),
+    lacks(DisprovingPlayer, Character),
+    lacks(DisprovingPlayer, Room),
     assertHas(DisprovingPlayer, Weapon), !.
 deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
-    (lacks(DisprovingPlayer, Character) ; has(_, Character) ; inEnvelope(Character)),
-    (lacks(DisprovingPlayer, Weapon) ; has(_, Weapon) ; inEnvelope(Weapon)),
+    lacks(DisprovingPlayer, Character),
+    lacks(DisprovingPlayer, Weapon),
     assertHas(DisprovingPlayer, Room), !.
 deduceCardShown(DisprovingPlayer, Character, Room, Weapon) :-
-    (lacks(DisprovingPlayer, Weapon) ; has(_, Weapon) ; inEnvelope(Weapon)),
-    (lacks(DisprovingPlayer, Room) ; has(_, Room) ; inEnvelope(Room)),
+    lacks(DisprovingPlayer, Weapon),
+    lacks(DisprovingPlayer, Room),
     assertHas(DisprovingPlayer, Character), !.
 %% We cannot deduce the card shown.
 deduceCardShown(_,_,_,_).
@@ -297,7 +297,6 @@ writeSuggestion(Room) :-
 findSuggestion(Character, Weapon) :-
     character(Character), potential(Character),
     weapon(Weapon), potential(Weapon).
-
 
 %% Check if an accusation is possible and inform the player if this is the case
 checkForAccusation(Player) :-
@@ -355,7 +354,6 @@ assertHas(Player, Card) :-
     checkNumKnownCards(Player),
     deduceSolution.
 
-
 %% Deduce the murderer, murder weapon, or murder location by process of elimination:
 %% if we know that all the cards but one of a certain type are in players' hands,
 %% the final card must be in the envelope, and all the players lack this card.
@@ -375,7 +373,7 @@ checkNumKnownCards(Player) :-
     numCards(Player, N), hasAll(Player, PlayerCards), length(PlayerCards, N), !,
     allType(potential, Cards), subtract(Cards, PlayerCards, RestCards),
     forall(member(C, RestCards), assertLacks(Player, C)).
-checkNumKnownCards(_) :- write('nothing deduced').
+checkNumKnownCards(_).
 
 getNumCards(Player, NumCards) :-
     validNumCards(NumCards), numCards(Player, NumCards).

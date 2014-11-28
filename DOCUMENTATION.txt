@@ -74,7 +74,8 @@ deduced information about. When it is time to make a suggestion all you have
 to do is tell Dr. Clue what room you are in, and it will provide you with
 a recommended Suggestion for the weapon and character, taking from the list of
 unknown cards when it can, and cards that it knows are in the envelope if there
-aren't any unknowns for that type.
+aren't any unknowns for that type. If you want, you can ignore the suggestion!
+Just make sure to tell Dr. Clue the cards you DID suggest when it prompts you.
 
 6.  Makes Accusations!
 If Dr. Clue has learned enough to know for certain what the three cards are that
@@ -116,15 +117,16 @@ Unfortunatley, the only way to get Dr. Clue into a usable state after something
 like that is to quit the program then reload and run it. There is no Undo; there
 is no Ctrl+Z.
 
-4.  Doesn't learn from wrong accusations.
+3.  Doesn't learn from wrong accusations.
 If another player makes an accusation that is wrong, then you have to just tell
 Dr. Clue to skip that player on that turn (and on subsequent turns, too, since
 that player no longer gets turns). So the database does not get updated
 and it learns nothing ... but YOU might.
 
-5.  Maximum cards per hand.
-Make sure you have enough players for your game of Clue. You can't have more than 15 cards
-in your hand!
+4.  Maximum cards per hand.
+Make sure you have enough players for your game of Clue. You can't have more
+than 15 cards in your hand! So if your playing a 2-player game with some
+crazy board that has 34 or more cards, Dr. Clue can't help you.
 
 
 ****************************************************

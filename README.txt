@@ -21,7 +21,7 @@ FEATURES
 5.  Provides Suggestion Suggestions.
 6.  Makes Accusations!
 7.  Customizable dealing order.
-8.  Iterative envelope-content inferrences.
+8.  Iterative envelope-content inferences.
 
 LIMITATIONS
 1.  Can't handle unsportspersonlike users.

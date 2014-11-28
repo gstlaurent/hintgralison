@@ -99,7 +99,7 @@ inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, nl, g
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Display all the information Dr. Clue knows.
-showDatabase :- write('******************* Database Contents **********************'), nl,
+showDatabase :- nl, write('******************* Database Contents **********************'), nl,
                 listAllCards, nl, listPlayers, listMe, nl, listAllPlayerCards,
                 listAllPotential, listAllKnown,
                 write('************************************************************'), nl.
@@ -151,17 +151,17 @@ lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
 %% Start Player's turn.
 gameLoop(Player) :-
     me(Player), !,
-    write('It\'s your turn!'), nl,
+    nl, write('It\'s your turn!'), nl,
     %% Player can make an accusation if it is their turn, even if not in a room.
     checkForAccusation(Player),
-    write('To make a suggestion, type "suggest".'), nl,
+    write('To make a suggestion, type "s".'), nl,
     write('To move to the next player without making a suggestion, hit enter.'), nl,
     write('To see the database, type "db". '),
     readline(X), nl,
     suggestionPrompt(Player,X).
 gameLoop(Player) :-
-    write('It\'s '), write(Player), write('\'s turn.'),nl,
-    write('Type "suggest" if '), write(Player), write(' made a suggestion or accusation.'), nl,
+    nl, write('It\'s '), write(Player), write('\'s turn.'),nl,
+    write('Type "s" if '), write(Player), write(' made a suggestion.'), nl,
     write('Type "db" to see the database.'), nl,
     write('Hit enter to move to the next player. '),
     readline(X), 
@@ -171,11 +171,11 @@ gameLoop(Player) :-
 %% If Player is another player, get their suggestion.
 suggestionPrompt(Player, db) :- showDatabase, nl, gameLoop(Player).
 % If an accusation can be made after the suggestion, let the player know
-suggestionPrompt(Player, suggest) :-
+suggestionPrompt(Player, s) :-
     me(Player),
     offerSuggestion, !,
     getSuggestion(Player).
-suggestionPrompt(Player, suggest) :-
+suggestionPrompt(Player, s) :-
     getSuggestion(Player).
 suggestionPrompt(Player,'') :- nl, next(Player, Next), gameLoop(Next).
 suggestionPrompt(Player,_) :-
@@ -185,15 +185,16 @@ suggestionPrompt(Player,_) :-
 %% a valid card name.
 getSuggestion(Player) :-
     me(Player), !,
-    playerRoom(Room),
+    playerRoom(Room), nl,
     %% Do not prompt user for room since they've already told us what room they're in.
-    write('Enter the CHARACTER suggestion: '), readline(Character),
-    write('Enter the WEAPON suggestion: '), readline(Weapon),
+    write('Enter your CHARACTER suggestion: '), readline(Character),
+    write('Enter your WEAPON suggestion: '), readline(Weapon),
     validateSuggestion(Player,Character,Weapon,Room).
 getSuggestion(Player) :-
-    write('Enter the CHARACTER suggestion: '), readline(Character),
-    write('Enter the WEAPON suggestion: '), readline(Weapon),
-    write('Enter the ROOM suggestion: '), readline(Room),
+    nl,
+    write('Enter the CHARACTER '), write(Player), write(' suggested: '), readline(Character),
+    write('Enter the WEAPON '), write(Player), write(' suggested: '), readline(Weapon),
+    write('Enter the ROOM '), write(Player), write(' suggested: '), readline(Room),
     validateSuggestion(Player,Character,Weapon,Room).
 
 %% Ensures a valid suggestion was made before moving on.
@@ -204,12 +205,18 @@ validateSuggestion(Player,_,_,_) :- nl, write('That is not a valid suggestion!')
 %% Prompt for the player who disproved a suggestion and the card they showed, making
 %% sure the player name and card are valid before recording them.
 makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
-    %me(CurrentPlayer),
+    me(CurrentPlayer),
     write('Name the PLAYER who showed a card (or just hit ENTER if no one could show anything): '),
     readline(DisprovingPlayer),
-    write('Name the CARD that was shown (or just hit ENTER if you didn\'t see it or no card was shown: '),
+    write('Name the CARD you were shown (or just hit ENTER if no card was shown: '),
     readline(Card),
     validateAndRecordSuggestion(CurrentPlayer,Character,Weapon,Room,DisprovingPlayer,Card).
+makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
+    write('Name the PLAYER who showed a card (or just hit ENTER if no one could show anything): '),
+    readline(DisprovingPlayer),
+    validateAndRecordSuggestion(CurrentPlayer,Character,Weapon,Room,DisprovingPlayer,'').
+
+
 
 %% Check that DisprovingPlayer and Card are valid, and enter this information
 %% into the database before continuing with the next player's turn.

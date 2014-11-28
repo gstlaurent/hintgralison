@@ -14,7 +14,10 @@ will repeat them here, but for more info:
 
 
 FEATURES
-1.  Easy-to-use interface. (EXTREMELY, beyond the minimum)
+
+1.  Easy-to-use interface. (EXTREMELY, beyond the minimum - try it out by
+    making some typo's at the prompts after all the cards and players have been
+    input into the database).
 2.  Let's you input your suggestions.
 3.  Infers card disownership.
 4.  Infers card ownership.
@@ -25,11 +28,11 @@ FEATURES
 
 LIMITATIONS
 1.  Can't handle unsportspersonlike users.
-        The database becomes corrupted if you to it or cheat, but it will validate
-        for you if you make a typo.
+    The database becomes corrupted if you lie to it or cheat, but it will
+    validate for you if you make a typo.
 2.  No recovery from serious mistakes.
     If you make too big a mistake, you simply have to restart. Please consult
     DOCUMENTATION for more details (this is user error).
 3.  Doesn't learn from wrong accusations.
     This is will be a feature in Dr. Clue 2.0
-4.  Maximum number of cards in a players hand is limited.
+4.  Maximum number of cards in a players hand is limited (but large!).

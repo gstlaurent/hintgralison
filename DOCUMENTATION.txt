@@ -72,14 +72,14 @@ knows that that player MUST own the third card, so it adds it to the database.
 Dr. Clue keeps track of cards which cards you've seen and which cards it has
 deduced information about. When it is time to make a suggestion all you have
 to do is tell Dr. Clue what room you are in, and it will provide you with
-a recommended Suggestion for the weapon and character, taking from the list of
+a recommended suggestion for the weapon and character, taking from the list of
 unknown cards when it can, and cards that it knows are in the envelope if there
 aren't any unknowns for that type. If you want, you can ignore the suggestion!
 Just make sure to tell Dr. Clue the cards you DID suggest when it prompts you.
 
 6.  Makes Accusations!
-If Dr. Clue has learned enough to know for certain what the three cards are that
-are in the envelope, then it let's you know! When you next have a chance (which
+If Dr. Clue has learned enough to know for certain the identity of the three
+cards in the envelope, then it let's you know! When you next have a chance (which
 might be immediately), you can make an accusation and WIN THE GAME!
 Congratulations, you! Congratulation, Dr. Clue!
 
@@ -111,8 +111,8 @@ showed that card, telling it instead that you passed.
 
 2.  Recovery from a mistake.
 If you accidentally tell Dr. Clue the wrong thing -- such as that you were shown
-Green when you were really shown White, or that Player 2 passed, when in fact,
-Player 2 showed something -- then its database might be permanently confused.
+Green when you were really shown White, or that no one showed a card, when in fact,
+a player showed something -- then its database might be permanently confused.
 Unfortunatley, the only way to get Dr. Clue into a usable state after something
 like that is to quit the program then reload and run it. There is no Undo; there
 is no Ctrl+Z.

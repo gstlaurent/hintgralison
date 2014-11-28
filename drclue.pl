@@ -2,7 +2,7 @@
 
 :- dynamic has/2, lacks/2, room/1, weapon/1, character/1, player/1,
    me/1, next/2, firstPlayer/1, potential/1, numCards/2,
-   playerRoom/1.
+   playerRoom/1, maybe/2.
 
 %% Start Dr. Clue here!    
 clue :-
@@ -19,6 +19,7 @@ clue :-
     retractall(potential(_)),
     retractall(numCards(_,_)),
     retractall(playerRoom(_)),
+    retractall(maybe(_,_)),
 
     nl, write('Welcome to Dr. Clue!'), nl, nl,
     write('To begin, Dr. Clue will lead you through the initialization of the game.'), nl, nl,
@@ -45,6 +46,8 @@ setup :-
 
     write('Next, enter the players, followed by how many cards they each have, starting with the player who will go first.'), nl,
     getPlayers, nl,
+
+    assertAllMaybes,
 
     getMyName,
 
@@ -95,6 +98,11 @@ getMyName :- write('Which player are you? '), readline(Character), inputMyName(C
 inputMyName(Character) :- player(Character),!, assert(me(Character)).
 inputMyName(_) :- write('That\'s not a valid player name. '), listPlayers, nl, getMyName.
 
+%% Assert, for each player, that they may have any of the cards.
+assertAllMaybes :-
+    allPlayers(Players), allType(potential,Cards),
+    forall(member(P, Players), assertMaybeAll(P, Cards)).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%% SHOW DATABASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -122,6 +130,8 @@ listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerC
 %% Print out everything Dr. Clue knows about the cards in Player's hand.
 listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is known to have these cards: '),
                            writeln(HasCards),
+                           maybeAll(Player, MaybeCards), write(Player), write(' may have some of these cards: '),
+                           writeln(MaybeCards),
                            lacksAll(Player, LacksCards), write(Player),
                            write(' does not have any of these cards: '), writeln(LacksCards), nl.
 
@@ -141,6 +151,9 @@ allType(Type, Items) :- findall(I, call(Type, I), Items).
 
 %% True if Cards is all the cards Dr. Clue knows Player has.
 hasAll(Player, Cards) :- findall(C, has(Player, C), Cards).
+
+%% True if Cards is all the cards Dr. Clue thinks Player may have.
+maybeAll(Player, Cards) :- findall(C, maybe(Player, C), Cards).
 
 %% True if Cards is all the cards Dr. Clue knows Player does not have.
 lacksAll(Player, Cards) :- findall(C, lacks(Player, C), Cards).
@@ -344,13 +357,11 @@ accuseLaterScript(Character, Weapon, Room) :-
 assertLacksTrio(Player, Character, Weapon, Room) :-
     assertLacks(Player, Character), assertLacks(Player, Weapon), assertLacks(Player, Room).
 
-%% assertLacks and assertHas create proper assertions if necessary.
+%% assertLacks, assertMaybe and assertHas create proper assertions if necessary.
 assertLacks(Player, Card) :- lacks(Player, Card), !.
-assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
-
-%% True when there are no players holding the given card, meaning it must be in the envelope.
-inEnvelope(Card) :- potential(Card), allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
-
+assertLacks(Player, Card) :- assert(lacks(Player, Card)), retract(maybe(Player, Card)), !.
+assertMaybe(Player, Card) :- maybe(Player, Card), !.
+assertMaybe(Player, Card) :- assert(maybe(Player, Card)), !.
 %% Ensure other players lack the card, if neccessary, and remove card from potential.
 assertHas(Player, Card) :- has(Player, Card), !.
 assertHas(Player, Card) :-
@@ -359,7 +370,15 @@ assertHas(Player, Card) :-
     allPlayers(Players), delete(Players, Player, Others),
     forall(member(P, Others), assertLacks(P, Card)),
     checkNumKnownCards(Player),
+    checkNumUnknownCards(Player),
     deduceSolution.
+
+%% Assert that Player may have any of the cards in Cards.
+assertMaybeAll(Player, Cards) :-
+    forall(member(Card, Cards), assertMaybe(Player, Card)).
+
+%% True when there are no players holding the given card, meaning it must be in the envelope.
+inEnvelope(Card) :- potential(Card), allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
 %% Deduce the murderer, murder weapon, or murder location by process of elimination:
 %% if we know that all the cards but one of a certain type are in players' hands,
@@ -381,6 +400,20 @@ checkNumKnownCards(Player) :-
     allType(potential, Cards), subtract(Cards, PlayerCards, RestCards),
     forall(member(C, RestCards), assertLacks(Player, C)).
 checkNumKnownCards(_).
+
+%% Check if Dr. Clue can determine what cards a player has from the cards they lack.
+%% Infers Player's cards if the number of cards in Players hand is equal to the number
+%% of cards they may have (maybes).
+%% We know all of the user's cards.
+checkNumUnknownCards(Player) :-
+    me(Player), !.
+checkNumUnknownCards(Player) :-
+    validNumCards(N), numCards(Player,N), maybeAll(Player, MaybeCards),
+    % length of cards player may have equals length of cards they have, so
+    % they must have all the cards in MaybeCards
+    length(MaybeCards, N), forall(member(Card, MaybeCards), assertHas(Player, Card)).
+checkNumUnknownCards(_).
+
 
 getNumCards(Player, NumCards) :-
     validNumCards(NumCards), numCards(Player, NumCards).

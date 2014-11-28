@@ -130,8 +130,6 @@ listAllPlayerCards :- allPlayers(Players), forall(member(P,Players), listPlayerC
 %% Print out everything Dr. Clue knows about the cards in Player's hand.
 listPlayerCards(Player) :- hasAll(Player, HasCards), write(Player), write(' is known to have these cards: '),
                            writeln(HasCards),
-                           maybeAll(Player, MaybeCards), write(Player), write(' may have some of these cards: '),
-                           writeln(MaybeCards),
                            lacksAll(Player, LacksCards), write(Player),
                            write(' does not have any of these cards: '), writeln(LacksCards), nl.
 

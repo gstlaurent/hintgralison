@@ -219,7 +219,7 @@ makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-
     me(CurrentPlayer),
     write('Name the PLAYER who showed a card (or just hit ENTER if no one could show anything): '),
     readline(DisprovingPlayer),
-    write('Name the CARD you were shown (or just hit ENTER if no card was shown: '),
+    write('Name the CARD you were shown (or just hit ENTER if no card was shown): '),
     readline(Card),
     validateAndRecordSuggestion(CurrentPlayer,Character,Weapon,Room,DisprovingPlayer,Card).
 makeSuggestion(CurrentPlayer,Character,Weapon,Room) :-

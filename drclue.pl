@@ -133,7 +133,7 @@ listAllPotential :-
 
 %% Print all the cards that must be in the envelope.
 listAllKnown :-
-    allType(inEnvelope, Known),
+    allType(inEnvelope, Known), 
     write('These cards are DEFINITELY in the envelope: '), writeln(Known).
 
 %% allType(Type,Items) is true if Items is a list of all the atoms of type Type.
@@ -310,9 +310,9 @@ checkForAccusation(_).
 
 %% Produce True when the given variables are indisputedly in the Clue envelope.
 accusation(Character, Weapon, Room) :-
-   character(Character), inEnvelope(Character),
-   weapon(Weapon), inEnvelope(Weapon),
-   room(Room), inEnvelope(Room).
+   character(Character), potential(Character), inEnvelope(Character),
+   weapon(Weapon), potential(Weapon), inEnvelope(Weapon),
+   room(Room), potential(Room), inEnvelope(Room).
 
 %% Let the user know the accusation they should make.
 accusescript(Character, Weapon, Room) :-
@@ -342,7 +342,7 @@ assertLacks(Player, Card) :- lacks(Player, Card), !.
 assertLacks(Player, Card) :- assert(lacks(Player, Card)), !.
 
 %% True when there are no players holding the given card, meaning it must be in the envelope.
-inEnvelope(Card) :- allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
+inEnvelope(Card) :- potential(Card), allPlayers(Players), foreach(member(Player, Players), lacks(Player, Card)).
 
 %% Ensure other players lack the card, if neccessary, and remove card from potential.
 assertHas(Player, Card) :- has(Player, Card), !.
